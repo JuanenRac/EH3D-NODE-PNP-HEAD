@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/EH3D_NODE_PNP_HEAD_BANNER.svg" alt="EH3D-NODE-PNP-HEAD banner" width="100%">
+  <img src="images/EH3D_BANNER.svg" alt="EH3D-NODE-PNP-HEAD banner" width="100%">
 </p>
 
 # 🛠️ EH3D-NODE-PNP-HEAD
