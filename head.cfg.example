@@ -1,0 +1,51 @@
+# EH3D-NODE-PNP-HEAD - head.cfg.example
+# The settings of the node, one `key = value` per line, `#` for a comment. The values below are the defaults: a file with only the lines you change is enough.
+# A value out of its range, or a key nobody knows, is reported and the default stays; a group of settings that disagrees goes back to the defaults.
+
+# --- the link ---
+name = pnp-head               # lower case letters, digits and hyphens, up to 32
+port = 80                     # 1 to 65535
+# token = ...                 # the node refuses every request that moves or changes something until it has one (up to 64 characters). Never written back.
+
+# --- the head ---
+nozzles = 2                   # 1 to 6
+
+# --- the Z axis of every nozzle, in mm (0 is the lowest point of the travel, the numbers go up) ---
+z_min_mm = 0
+z_max_mm = 40
+z_safe_mm = 35                # where the nozzles go when the head is safe
+z_speed_mm_s = 30             # 1 to 300
+
+# --- the rotation of every nozzle, in degrees ---
+rot_min_deg = -180
+rot_max_deg = 180
+rot_speed_deg_s = 360         # 10 to 3600
+
+# --- the interlocks ---
+rotate_min_z_mm = 10          # a nozzle is turned only at or above this height
+release_max_z_mm = 5          # a part is released only at or below this height
+
+# --- the vacuum, in kPa below the air pressure ---
+vacuum_target_kpa = 50        # 5 to 95: reached within vacuum_settle_ms means a part is held
+vacuum_hold_min_kpa = 35      # 3 to 95, below the target: a held part whose vacuum stays under this for vacuum_loss_ms is lost
+vacuum_settle_ms = 600        # 50 to 5000
+vacuum_loss_ms = 100          # 10 to 5000
+blow_ms = 80                  # 10 to 2000: the puff that lets a part go
+pump_max_run_s = 600          # 5 to 86400: the longest the pump may run without a stop
+
+# --- the pressure sensors, one per nozzle: kPa = (raw - pressure_zero) * pressure_scale ---
+pressure_zero = 0
+pressure_scale = 0.1
+pressure_max_kpa = 101        # 20 to 200: a reading above this cannot be real
+pressure_stuck_ms = 3000      # 500 to 60000: a reading that does not change at all for this long while a valve is open is a dead sensor
+pressure_samples = 4          # 1 to 32 readings averaged
+calibration_enabled = 0       # the calibration changes what the limits mean: off until a person switches it on
+
+# --- the lights, in percent, at the start ---
+light_up_pct = 0
+light_down_pct = 0
+
+# --- the watch over the server and the safe state ---
+link_lost_ms = 2000           # 500 to 600000
+safe_z_retract = 1            # go up to z_safe_mm in the safe state
+safe_vacuum = off             # off: the pump stops and the valves close (a part may fall); hold: they stay as they were

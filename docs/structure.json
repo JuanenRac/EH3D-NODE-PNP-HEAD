@@ -1,0 +1,420 @@
+{
+  "repo": "EH3D-NODE-PNP-HEAD",
+  "ecosystem": "eh3d",
+  "svg": "en",
+  "exempt": [],
+  "tagline": {
+    "en": "Two levels: the folders, and the files that carry the logic.",
+    "es": "Dos niveles: las carpetas y los ficheros que llevan la lógica.",
+    "de": "Zwei Ebenen: die Ordner und die Dateien, die die Logik tragen.",
+    "fr": "Deux niveaux : les dossiers et les fichiers qui portent la logique.",
+    "it": "Due livelli: le cartelle e i file che portano la logica.",
+    "ja": "2階層：フォルダと、ロジックを担うファイル。",
+    "zh": "两个层级：文件夹，以及承载逻辑的文件。",
+    "pt": "Dois níveis: as pastas e os ficheiros que levam a lógica."
+  },
+  "cards": [
+    {
+      "name": "core/",
+      "span": 3,
+      "accent": "a",
+      "rows": [
+        {
+          "name": "head_config.hpp  cfg_text.hpp",
+          "tree_name": "head_config.hpp cfg_text.hpp",
+          "desc": {
+            "en": "the settings file and its safe defaults",
+            "es": "el fichero de ajustes y sus valores seguros",
+            "de": "die Einstellungsdatei und ihre sicheren Standardwerte",
+            "fr": "le fichier de réglages et ses valeurs sûres",
+            "it": "il file delle impostazioni e i suoi valori sicuri",
+            "ja": "設定ファイルと安全な既定値",
+            "zh": "设置文件及其安全默认值",
+            "pt": "o ficheiro de definições e os seus valores seguros"
+          }
+        },
+        {
+          "name": "head.hpp",
+          "desc": {
+            "en": "what the head does with its nozzles, pump and axes",
+            "es": "lo que hace el cabezal con sus boquillas, bomba y ejes",
+            "de": "was der Kopf mit Düsen, Pumpe und Achsen tut",
+            "fr": "ce que fait la tête de ses buses, de sa pompe et de ses axes",
+            "it": "cosa fa la testa con ugelli, pompa e assi",
+            "ja": "ヘッドがノズル、ポンプ、軸に対して行うこと",
+            "zh": "贴装头对吸嘴、泵和轴的处理",
+            "pt": "o que a cabeça faz com os seus bicos, bomba e eixos"
+          }
+        },
+        {
+          "name": "head_node.hpp  version.hpp",
+          "tree_name": "head_node.hpp version.hpp",
+          "desc": {
+            "en": "the words of the node on the network",
+            "es": "las palabras del nodo en la red",
+            "de": "die Worte des Knotens im Netzwerk",
+            "fr": "les mots du nœud sur le réseau",
+            "it": "le parole del nodo sulla rete",
+            "ja": "ネットワーク上のノードの語",
+            "zh": "节点在网络上的用语",
+            "pt": "as palavras do nó na rede"
+          }
+        },
+        {
+          "name": "head_sim.hpp",
+          "desc": {
+            "en": "a head on a computer: pump, valves, parts and sensors",
+            "es": "un cabezal en un ordenador: bomba, válvulas, piezas y sensores",
+            "de": "ein Kopf auf einem Rechner: Pumpe, Ventile, Teile und Sensoren",
+            "fr": "une tête sur un ordinateur : pompe, vannes, pièces et capteurs",
+            "it": "una testa su un computer: pompa, valvole, pezzi e sensori",
+            "ja": "コンピュータ上のヘッド：ポンプ、バルブ、部品、センサー",
+            "zh": "计算机上的贴装头：泵、阀门、元件和传感器",
+            "pt": "uma cabeça num computador: bomba, válvulas, peças e sensores"
+          }
+        },
+        {
+          "name": "json.hpp  auth.hpp  and 8 more",
+          "tree_name": "json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp",
+          "desc": {
+            "en": "plain helpers shared by the nodes, kept identical by a tool",
+            "es": "ayudantes simples compartidos por los nodos, iguales gracias a una herramienta",
+            "de": "einfache Helfer, die alle Knoten teilen und ein Werkzeug gleich hält",
+            "fr": "utilitaires simples partagés par les nœuds, gardés identiques par un outil",
+            "it": "aiuti semplici condivisi dai nodi, tenuti uguali da uno strumento",
+            "ja": "ノード間で共有する単純な補助部分。ツールで同一に保つ",
+            "zh": "各节点共享的简单辅助代码，由工具保持一致",
+            "pt": "auxiliares simples partilhados pelos nós, mantidos iguais por uma ferramenta"
+          }
+        }
+      ],
+      "sub": {
+        "en": "the logic of the node: no hardware, no clock",
+        "es": "la lógica del nodo: sin hardware ni reloj",
+        "de": "die Logik des Knotens: ohne Hardware, ohne Uhr",
+        "fr": "la logique du nœud : sans matériel ni horloge",
+        "it": "la logica del nodo: senza hardware né orologio",
+        "ja": "ノードのロジック：ハードウェアも時計も使わない",
+        "zh": "节点的逻辑：不碰硬件和时钟",
+        "pt": "a lógica do nó: sem hardware nem relógio"
+      }
+    },
+    {
+      "name": "tests/",
+      "span": 3,
+      "accent": "b",
+      "rows": [
+        {
+          "name": "check.hpp  CMakeLists.txt",
+          "tree_name": "check.hpp CMakeLists.txt",
+          "desc": {
+            "en": "the harness of the tests and how they are built",
+            "es": "el armazón de las pruebas y cómo se compilan",
+            "de": "der Rahmen der Tests und wie sie gebaut werden",
+            "fr": "le cadre des tests et leur compilation",
+            "it": "la struttura delle prove e come si compilano",
+            "ja": "テストの枠組みとビルド方法",
+            "zh": "测试框架及其构建方式",
+            "pt": "a estrutura dos testes e como se compilam"
+          }
+        },
+        {
+          "name": "test_config.cpp",
+          "desc": {
+            "en": "the settings file, the filter and the calibration",
+            "es": "el fichero de ajustes, el filtro y la calibración",
+            "de": "die Einstellungsdatei, der Filter und die Kalibrierung",
+            "fr": "le fichier de réglages, le filtre et l'étalonnage",
+            "it": "il file delle impostazioni, il filtro e la calibrazione",
+            "ja": "設定ファイル、フィルタ、校正",
+            "zh": "设置文件、滤波器和校准",
+            "pt": "o ficheiro de definições, o filtro e a calibração"
+          }
+        },
+        {
+          "name": "test_head.cpp",
+          "desc": {
+            "en": "the head on a simulated pump and sensors: picks, losses, interlocks, safe state",
+            "es": "el cabezal con bomba y sensores simulados: recogidas, pérdidas, bloqueos, estado seguro",
+            "de": "der Kopf an simulierter Pumpe und Sensoren: Aufnahmen, Verluste, Verriegelungen, sicherer Zustand",
+            "fr": "la tête avec pompe et capteurs simulés : prises, pertes, verrouillages, état sûr",
+            "it": "la testa con pompa e sensori simulati: prelievi, perdite, interblocchi, stato sicuro",
+            "ja": "模擬ポンプとセンサー上のヘッド：吸着、脱落、インターロック、安全状態",
+            "zh": "模拟泵和传感器上的贴装头：吸取、丢失、联锁、安全状态",
+            "pt": "a cabeça com bomba e sensores simulados: recolhas, perdas, bloqueios, estado seguro"
+          }
+        },
+        {
+          "name": "test_node.cpp",
+          "desc": {
+            "en": "the words of the network, the token, the safe state and the contract page",
+            "es": "las palabras de la red, el token, el estado seguro y la página del contrato",
+            "de": "die Netzwerkworte, das Token, der sichere Zustand und die Vertragsseite",
+            "fr": "les mots du réseau, le jeton, l'état sûr et la page du contrat",
+            "it": "le parole della rete, il token, lo stato sicuro e la pagina del contratto",
+            "ja": "ネットワークの語、トークン、安全状態、契約ページ",
+            "zh": "网络用语、令牌、安全状态和契约页面",
+            "pt": "as palavras da rede, o token, o estado seguro e a página do contrato"
+          }
+        }
+      ],
+      "sub": {
+        "en": "host tests with a fixed seed",
+        "es": "pruebas de ordenador con semilla fija",
+        "de": "Rechnertests mit festem Seed",
+        "fr": "tests sur ordinateur à graine fixe",
+        "it": "prove sul computer con seme fisso",
+        "ja": "固定シードのホストテスト",
+        "zh": "固定种子的主机测试",
+        "pt": "testes do computador com semente fixa"
+      }
+    },
+    {
+      "name": "docs/",
+      "span": 3,
+      "accent": "c",
+      "rows": [
+        {
+          "name": "CONTRACT.md",
+          "desc": {
+            "en": "what the node says on the network (and on the chain)",
+            "es": "lo que dice el nodo en la red (y en la cadena)",
+            "de": "was der Knoten im Netzwerk (und in der Kette) sagt",
+            "fr": "ce que dit le nœud sur le réseau (et sur la chaîne)",
+            "it": "cosa dice il nodo sulla rete (e sulla catena)",
+            "ja": "ノードがネットワーク（とチェーン）上で伝えること",
+            "zh": "节点在网络（和链路）上所说的内容",
+            "pt": "o que o nó diz na rede (e na cadeia)"
+          }
+        },
+        {
+          "name": "REQUIREMENTS.md",
+          "desc": {
+            "en": "every requirement and the test that shows it",
+            "es": "cada requisito y la prueba que lo demuestra",
+            "de": "jede Anforderung und der Test, der sie zeigt",
+            "fr": "chaque exigence et le test qui la montre",
+            "it": "ogni requisito e il test che lo dimostra",
+            "ja": "すべての要件とそれを示すテスト",
+            "zh": "每条需求及证明它的测试",
+            "pt": "cada requisito e o teste que o demonstra"
+          }
+        },
+        {
+          "name": "SCOPE.md  STATUS.md  NOT_YET.md",
+          "tree_name": "SCOPE.md STATUS.md NOT_YET.md",
+          "desc": {
+            "en": "what it is for, how far it is, what waits",
+            "es": "para qué sirve, hasta dónde llega, qué espera",
+            "de": "wofür es da ist, wie weit es ist, was wartet",
+            "fr": "à quoi il sert, où il en est, ce qui attend",
+            "it": "a cosa serve, a che punto è, cosa aspetta",
+            "ja": "目的、現状、保留事項",
+            "zh": "用途、进展和待办事项",
+            "pt": "para que serve, até onde vai, o que espera"
+          }
+        },
+        {
+          "name": "HARDWARE.md",
+          "desc": {
+            "en": "preliminary parts, bench tests and licences",
+            "es": "piezas preliminares, pruebas en banco y licencias",
+            "de": "vorläufige Teile, Prüfstandtests und Lizenzen",
+            "fr": "pièces préliminaires, essais sur banc et licences",
+            "it": "parti preliminari, prove al banco e licenze",
+            "ja": "暫定部品、ベンチ試験、ライセンス",
+            "zh": "初步零件、台架测试和许可",
+            "pt": "peças preliminares, testes em bancada e licenças"
+          }
+        },
+        {
+          "desc": {
+            "en": "the data of the two pictures",
+            "es": "los datos de las dos imágenes",
+            "de": "die Daten der beiden Bilder",
+            "fr": "les données des deux images",
+            "it": "i dati delle due immagini",
+            "ja": "2 つの図のデータ",
+            "zh": "两张图的数据",
+            "pt": "os dados das duas imagens"
+          },
+          "name": "architecture.json  structure.json",
+          "tree_name": "architecture.json structure.json"
+        }
+      ],
+      "sub": {
+        "en": "the documents of the suite",
+        "es": "los documentos de la suite",
+        "de": "die Dokumente der Suite",
+        "fr": "les documents de la suite",
+        "it": "i documenti della suite",
+        "ja": "スイートのドキュメント",
+        "zh": "套件的文档",
+        "pt": "os documentos da suite"
+      }
+    },
+    {
+      "name": {
+        "en": "Other folders and the files at the root",
+        "es": "Otras carpetas y los archivos de la raíz",
+        "de": "Weitere Ordner und die Dateien im Wurzelverzeichnis",
+        "fr": "Autres dossiers et fichiers à la racine",
+        "it": "Altre cartelle e i file nella radice",
+        "ja": "その他のフォルダーとルートのファイル",
+        "zh": "其他文件夹和根目录文件",
+        "pt": "Outras pastas e os ficheiros da raiz"
+      },
+      "span": 3,
+      "accent": "a",
+      "kind": "group",
+      "rows": [
+        {
+          "name": "tools/",
+          "desc": {
+            "en": "the repository check, its tests and the picture tools",
+            "es": "la comprobación del repositorio, sus pruebas y las herramientas de las imágenes",
+            "fr": "le contrôle du dépôt, ses tests et les outils des images",
+            "it": "il controllo del repository, i suoi test e gli strumenti delle immagini",
+            "de": "die Repository-Prüfung, ihre Tests und die Bild-Werkzeuge",
+            "zh": "仓库检查、其测试以及图片工具",
+            "ja": "リポジトリ チェック、そのテスト、画像のツール",
+            "pt": "a verificação do repositório, os seus testes e as ferramentas das imagens"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "banner and the Architecture and Repository Structure pictures",
+            "es": "banner y las imágenes de Arquitectura y Estructura del repositorio",
+            "de": "Banner und die Bilder von Architektur und Repository-Struktur",
+            "fr": "bannière et images d'Architecture et de Structure du dépôt",
+            "it": "banner e le immagini di Architettura e Struttura del repository",
+            "ja": "バナーとアーキテクチャ・リポジトリ構成の図",
+            "zh": "横幅图以及架构和仓库结构图片",
+            "pt": "banner e as imagens de Arquitetura e Estrutura do repositório"
+          }
+        },
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI and dashboard workflows, issue and pull-request templates",
+            "es": "flujos de CI y del panel, plantillas de issues y pull requests",
+            "de": "CI- und Dashboard-Workflows, Vorlagen für Issues und Pull Requests",
+            "fr": "workflows de CI et du tableau de bord, modèles d'issues et de pull requests",
+            "it": "workflow di CI e della dashboard, modelli di issue e pull request",
+            "ja": "CI とダッシュボードのワークフロー、Issue と PR のテンプレート",
+            "zh": "CI 与仪表板工作流、Issue 和 PR 模板",
+            "pt": "fluxos de CI e do painel, modelos de issues e pull requests"
+          }
+        },
+        {
+          "name": "eh3d.project.json",
+          "desc": {
+            "en": "manifest: version, role, maturity and build command",
+            "es": "manifiesto: versión, rol, madurez y comando de compilación",
+            "de": "Manifest: Version, Rolle, Reifegrad und Build-Befehl",
+            "fr": "manifeste : version, rôle, maturité et commande de compilation",
+            "it": "manifesto: versione, ruolo, maturità e comando di compilazione",
+            "ja": "マニフェスト：バージョン、役割、成熟度、ビルドコマンド",
+            "zh": "清单：版本、角色、成熟度和构建命令",
+            "pt": "manifesto: versão, papel, maturidade e comando de compilação"
+          }
+        },
+        {
+          "name": "head.cfg.example",
+          "desc": {
+            "en": "all the settings with their defaults and ranges",
+            "es": "todos los ajustes con sus valores por defecto y rangos",
+            "de": "alle Einstellungen mit Standardwerten und Bereichen",
+            "fr": "tous les réglages avec leurs valeurs par défaut et plages",
+            "it": "tutte le impostazioni con valori predefiniti e intervalli",
+            "ja": "すべての設定と既定値・範囲",
+            "zh": "全部设置及其默认值和范围",
+            "pt": "todas as definições com os valores por omissão e intervalos"
+          }
+        },
+        {
+          "name": "VERSION",
+          "desc": {
+            "en": "the version of the repository",
+            "es": "la versión del repositorio",
+            "fr": "la version du dépôt",
+            "it": "la versione del repository",
+            "de": "die Version des Repositorys",
+            "zh": "仓库的版本",
+            "ja": "リポジトリのバージョン",
+            "pt": "a versão do repositório"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé dans chaque version",
+            "it": "cosa è cambiato in ogni versione",
+            "ja": "各バージョンの変更点",
+            "zh": "每个版本的变更",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "AGENTS.md",
+          "desc": {
+            "en": "rules for anyone who changes the repository",
+            "es": "reglas para quien cambie el repositorio",
+            "de": "Regeln für alle, die das Repository ändern",
+            "fr": "règles pour quiconque modifie le dépôt",
+            "it": "regole per chi modifica il repository",
+            "ja": "リポジトリを変更する人のための規則",
+            "zh": "修改仓库者须遵守的规则",
+            "pt": "regras para quem altera o repositório"
+          }
+        },
+        {
+          "name": "test.sh  test.bat",
+          "tree_name": "test.sh test.bat",
+          "desc": {
+            "en": "run the host tests",
+            "es": "ejecutar las pruebas del ordenador",
+            "de": "die Rechnertests ausführen",
+            "fr": "lancer les tests sur ordinateur",
+            "it": "eseguire le prove sul computer",
+            "ja": "ホストテストを実行",
+            "zh": "运行主机测试",
+            "pt": "executar os testes do computador"
+          }
+        },
+        {
+          "name": "SECURITY.md  SUPPORT.md",
+          "tree_name": "SECURITY.md SUPPORT.md",
+          "desc": {
+            "en": "how to report a vulnerability and where to ask",
+            "es": "cómo informar de una vulnerabilidad y dónde preguntar",
+            "de": "Schwachstellen melden und Fragen stellen",
+            "fr": "signaler une vulnérabilité et poser des questions",
+            "it": "come segnalare una vulnerabilità e dove chiedere",
+            "ja": "脆弱性の報告方法と問い合わせ先",
+            "zh": "如何报告漏洞及在哪里提问",
+            "pt": "como comunicar uma vulnerabilidade e onde perguntar"
+          }
+        },
+        {
+          "name": "CONTRIBUTING.md  LICENSE",
+          "tree_name": "CONTRIBUTING.md CODE_OF_CONDUCT.md LICENSE",
+          "desc": {
+            "en": "how to contribute, the code of conduct and the licence",
+            "es": "cómo contribuir, el código de conducta y la licencia",
+            "de": "Mitwirken, Verhaltenskodex und Lizenz",
+            "fr": "contribuer, code de conduite et licence",
+            "it": "come contribuire, codice di condotta e licenza",
+            "ja": "貢献方法、行動規範、ライセンス",
+            "zh": "参与贡献、行为准则和许可证",
+            "pt": "como contribuir, o código de conduta e a licença"
+          }
+        }
+      ]
+    }
+  ]
+}

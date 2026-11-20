@@ -1,0 +1,147 @@
+{
+  "repo": "EH3D-NODE-PNP-HEAD",
+  "ecosystem": "eh3d",
+  "tagline": "The node of the head of a pick-and-place machine: vacuum, puff of air, axes, lights, interlocks, a safe state.",
+  "description": "EH3D-NODE-PNP-HEAD is the logic of the node that stands between the server and the head of a pick-and-place machine. The server asks over HTTP with a token; the node runs the pump, the valves, the axes and the lights under interlocks, tells a part held from a part lost, and goes to a safe state by itself when the server is lost. All of it is tried against a simulator; the firmware and the hardware are not written.",
+  "columns": [
+    "WHO USES IT",
+    "THIS REPOSITORY",
+    "WHAT IT DEPENDS ON"
+  ],
+  "nodes": [
+    {
+      "id": "server",
+      "column": 0,
+      "level": "external",
+      "title": "EH3D-SERVER",
+      "lines": [
+        "the plugin for pick-and-place",
+        "machines asks for a place"
+      ]
+    },
+    {
+      "id": "pnp",
+      "column": 0,
+      "level": "external",
+      "title": "EH3D-PHOENIX-PNP",
+      "lines": [
+        "plans the jobs and describes",
+        "the head and this node"
+      ]
+    },
+    {
+      "id": "settings",
+      "column": 1,
+      "level": "tested",
+      "title": "Settings file",
+      "lines": [
+        "head.cfg with safe defaults;",
+        "a wrong value never opens a limit"
+      ],
+      "code": [
+        "core/head_config.hpp"
+      ]
+    },
+    {
+      "id": "net",
+      "column": 1,
+      "level": "tested",
+      "title": "Network words",
+      "lines": [
+        "status, pick, place, Z, rotate,",
+        "light, stop; token; contract"
+      ],
+      "code": [
+        "core/head_node.hpp",
+        "docs/CONTRACT.md"
+      ]
+    },
+    {
+      "id": "head",
+      "column": 1,
+      "level": "tested",
+      "title": "Nozzles and interlocks",
+      "lines": [
+        "pick, hold, lost part, release,",
+        "heights, pump limit, safe state"
+      ],
+      "code": [
+        "core/head.hpp"
+      ]
+    },
+    {
+      "id": "base",
+      "column": 2,
+      "level": "contract",
+      "title": "Shared firmware base",
+      "lines": [
+        "ten plain helpers from",
+        "EH3D-COMMON, kept identical"
+      ],
+      "code": [
+        "core/json.hpp",
+        "core/auth.hpp"
+      ]
+    },
+    {
+      "id": "firmware",
+      "column": 2,
+      "level": "untested",
+      "title": "ESP-IDF firmware",
+      "lines": [
+        "network, panel, update:",
+        "not written, never run"
+      ]
+    },
+    {
+      "id": "hardware",
+      "column": 2,
+      "level": "untested",
+      "title": "Pump, valves, axes",
+      "lines": [
+        "drivers and the readings:",
+        "not written, never run"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "server",
+      "to": "net",
+      "label": "HTTP",
+      "level": "untested"
+    },
+    {
+      "from": "net",
+      "to": "head",
+      "level": "tested"
+    },
+    {
+      "from": "settings",
+      "to": "net",
+      "level": "tested"
+    },
+    {
+      "from": "base",
+      "to": "net",
+      "level": "contract"
+    },
+    {
+      "from": "net",
+      "to": "firmware",
+      "level": "untested"
+    },
+    {
+      "from": "head",
+      "to": "hardware",
+      "level": "untested"
+    }
+  ],
+  "legend": {
+    "tested": "rules covered by tests on a computer",
+    "contract": "shared base, kept identical by a tool",
+    "untested": "has not run on real hardware",
+    "external": "a program, a person or another repository"
+  },
+  "footer": "Nothing has run on a board, a pump or a sensor yet."
+}
