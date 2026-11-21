@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
-  <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
+  <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
@@ -30,7 +30,7 @@
 | | |
 |---|---|
 | Versione | `0.0.2` |
-| Maturità | Impalcatura |
+| Maturità | Funzionale |
 | Test | 85 |
 | Stack tecnologico | C++17 (host tests), Python 3.10+ |
 | Su hardware reale | Non ancora eseguito su hardware |
