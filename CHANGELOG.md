@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.0.2] - Three buses for the feeders, a pressure sensor or a vacuum switch for every nozzle and the lock of the X and Y axes
+
 - **Two ways to sense the vacuum of a nozzle**, chosen for each nozzle with `nozzle_N_sensor` in `head.cfg`: a pressure sensor read as a number (filtered, calibrated, with a band between the target and the hold limit) or a vacuum switch read as a level (debounced, with its polarity as a setting). The pick, the hold and the loss work the same for both.
 - **Alarms of a nozzle:** a part lost, a vacuum not reached, a sensor out of range (a number that cannot be real, or a level that is neither high nor low) and a sensor frozen (a number that does not change, or a switch that says vacuum with nothing pulling), each with a code, shown in the answers until a person acknowledges.
 - **Calibration only for the pressure sensors:** a nozzle with a switch refuses it with the reason.
