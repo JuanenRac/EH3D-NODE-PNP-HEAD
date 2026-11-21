@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-57-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** a scaffold with real, tested logic and no hardware. The rules of the node run on a computer against a simulator (57 tests pass), but nothing here has been built into firmware, flashed or connected to a pump, a valve, a pressure sensor or an axis.
+**Honesty check - what actually runs today:** a scaffold with real, tested logic and no hardware. The rules of the node run on a computer against a simulator (85 tests pass), but nothing here has been built into firmware, flashed or connected to a pump, a valve, a pressure sensor or an axis.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.1` |
 | Maturity | Scaffolding |
-| Tests | 57 |
+| Tests | 85 |
 | Stack | C++17 (host tests), Python 3.10+ |
 | On real hardware | Not run on hardware yet |
 
@@ -45,7 +45,7 @@ Each line is one part of this repository and the light says how far it is today.
 
 | Area | State | What it means here |
 |---|---|---|
-| Logic and simulator | 🟡 | The rules of the node run against a simulator with a fixed seed; 57 tests pass on a computer. |
+| Logic and simulator | 🟡 | The rules of the node run against a simulator with a fixed seed; 85 tests pass on a computer. |
 | Network contract | 🟡 | The words of the node are written in docs/CONTRACT.md and a test fails when the page and the answers differ; the server's plugin does not use this node yet. |
 | Firmware | 🟠 | The firmware for the board is not written yet: only the plain helpers of the shared base are imported. |
 | Real hardware | 🔴 | Nothing has run on a pump, a valve, a pressure sensor or an axis. |
@@ -53,6 +53,7 @@ Each line is one part of this repository and the light says how far it is today.
 ## 🎯 Overview
 
 * **One node, one head:** it picks and releases parts with the vacuum of each nozzle, tells a lost part from a part that was never there, moves the Z axis and the rotation under interlocks, and goes to a safe state by itself when it loses the server.
+* **Two ways to sense the vacuum, and a lock for the axes:** each nozzle has a pressure sensor (filtered, calibrated, with a band) or a vacuum switch (debounced), chosen in `head.cfg`, with alarms for a part lost, a vacuum not reached and a sensor out of range or frozen; the head also says when every nozzle is raised to the safe height, so the machine may move in X and Y, and refuses to lower a nozzle while it does.
 
 ## 🧩 Role in EH3D
 
@@ -90,6 +91,7 @@ POST /api/light?up=P&down=Q              the two lights, in percent
 POST /api/stop                           stop every move (the vacuum is not touched)
 POST /api/ack[?n=N]                      clear a fault that is gone (or the safe state, without n)
 POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   if the settings allow it
+POST /api/xy?moving=1|0                    the machine asks to move in X and Y (only with every nozzle raised) or says it stopped
 ```
 
 ## ⚙️ Configuration
@@ -110,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Testing
 
-57 tests: C++ host tests with a fixed seed (they run the simulator and the words of the network and compare the contract page with the answers) and Python tests of the repository. The CI also runs the C++ tests with AddressSanitizer and UBSan.
+85 tests: C++ host tests with a fixed seed (they run the simulator and the words of the network and compare the contract page with the answers) and Python tests of the repository. The CI also runs the C++ tests with AddressSanitizer and UBSan.
 
 ## 🏗️ Build & Release
 
@@ -129,14 +131,15 @@ The version lives in `eh3d.project.json` and each version has its entry in [CHAN
 EH3D-NODE-PNP-HEAD/
 ├── core/
 │   ├── head_config.hpp cfg_text.hpp                                                                                                         the settings file and its safe defaults
-│   ├── head.hpp                                                                                                                             what the head does with its nozzles, pump and axes
+│   ├── head.hpp                                                                                                                             nozzles, pump and axes; analog or digital vacuum sensing; the X/Y lock
 │   ├── head_node.hpp version.hpp                                                                                                            the words of the node on the network
-│   ├── head_sim.hpp                                                                                                                         a head on a computer: pump, valves, parts and sensors
+│   ├── head_sim.hpp                                                                                                                         a head on a computer: pump, valves, parts, sensors, switches
 │   └── json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp   plain helpers shared by the nodes, kept identical by a tool
 ├── tests/
 │   ├── check.hpp CMakeLists.txt                                                                                                             the harness of the tests and how they are built
 │   ├── test_config.cpp                                                                                                                      the settings file, the filter and the calibration
 │   ├── test_head.cpp                                                                                                                        the head on a simulated pump and sensors: picks, losses, interlocks, safe state
+│   ├── test_sensor.cpp                                                                                                                      analog and digital sensing, alarms, and the X/Y lock
 │   └── test_node.cpp                                                                                                                        the words of the network, the token, the safe state and the contract page
 ├── docs/
 │   ├── CONTRACT.md                                                                                                                          what the node says on the network (and on the chain)

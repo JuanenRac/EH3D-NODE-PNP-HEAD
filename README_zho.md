@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-57-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性核对 - 今天真正能运行的内容：** 这是一个带有真实且经过测试的逻辑、但没有硬件的脚手架。节点的规则在计算机上对模拟器运行（57 个测试通过），但这里的内容从未编译成固件、烧录，也从未连接到泵、阀门、压力传感器或轴。
+**诚实性核对 - 今天真正能运行的内容：** 这是一个带有真实且经过测试的逻辑、但没有硬件的脚手架。节点的规则在计算机上对模拟器运行（85 个测试通过），但这里的内容从未编译成固件、烧录，也从未连接到泵、阀门、压力传感器或轴。
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | 版本 | `0.0.1` |
 | 成熟度 | 脚手架 |
-| 测试 | 57 |
+| 测试 | 85 |
 | 技术栈 | C++17 (host tests), Python 3.10+ |
 | 真实硬件 | 尚未在硬件上运行 |
 
@@ -45,7 +45,7 @@
 
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
-| 逻辑与模拟器 | 🟡 | 节点的规则对固定种子的模拟器运行；57 个测试在计算机上通过。 |
+| 逻辑与模拟器 | 🟡 | 节点的规则对固定种子的模拟器运行；85 个测试在计算机上通过。 |
 | 网络契约 | 🟡 | 节点的用语写在 docs/CONTRACT.md 中，页面与应答不一致时测试会失败；服务器的插件尚未使用该节点。 |
 | 固件 | 🟠 | 电路板的固件尚未编写：只导入了共享基础中的简单辅助代码。 |
 | 真实硬件 | 🔴 | 泵、阀门、压力传感器或轴上尚未运行任何东西。 |
@@ -53,6 +53,7 @@
 ## 🎯 概述
 
 * **一个节点，一个贴装头：** 用每个吸嘴的真空吸取和释放元件，区分丢失的元件与从未吸到的元件，在联锁下移动 Z 轴和旋转，并在失去服务器时自行进入安全状态。
+* **两种真空检测方式，加一个轴联锁：** 每个吸嘴在 `head.cfg` 中选择压力传感器（滤波、校准、带回差）或真空开关（去抖），并对元件丢失、未达到真空、传感器超范围或冻结给出报警；贴装头还会说明所有吸嘴何时已升到安全高度、机器可以在 X 和 Y 方向移动，并在此期间拒绝降低吸嘴。
 
 ## 🧩 在 EH3D 中的角色
 
@@ -90,6 +91,7 @@ POST /api/light?up=P&down=Q              the two lights, in percent
 POST /api/stop                           stop every move (the vacuum is not touched)
 POST /api/ack[?n=N]                      clear a fault that is gone (or the safe state, without n)
 POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   if the settings allow it
+POST /api/xy?moving=1|0                    the machine asks to move in X and Y (only with every nozzle raised) or says it stopped
 ```
 
 ## ⚙️ 配置
@@ -110,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 测试
 
-57 个测试：固定种子的 C++ 主机测试（运行模拟器和网络用语，并将契约页面与应答对比）以及仓库的 Python 测试。CI 还会用 AddressSanitizer 和 UBSan 运行 C++ 测试。
+85 个测试：固定种子的 C++ 主机测试（运行模拟器和网络用语，并将契约页面与应答对比）以及仓库的 Python 测试。CI 还会用 AddressSanitizer 和 UBSan 运行 C++ 测试。
 
 ## 🏗️ 构建与发布
 
@@ -129,14 +131,15 @@ python -I -m unittest discover -s tools -p "test_*.py"
 EH3D-NODE-PNP-HEAD/
 ├── core/
 │   ├── head_config.hpp cfg_text.hpp                                                                                                         设置文件及其安全默认值
-│   ├── head.hpp                                                                                                                             贴装头对吸嘴、泵和轴的处理
+│   ├── head.hpp                                                                                                                             吸嘴、气泵和轴；模拟或数字真空检测；X/Y 联锁
 │   ├── head_node.hpp version.hpp                                                                                                            节点在网络上的用语
-│   ├── head_sim.hpp                                                                                                                         计算机上的贴装头：泵、阀门、元件和传感器
+│   ├── head_sim.hpp                                                                                                                         电脑上的贴装头：气泵、阀、元件、压力传感器和开关
 │   └── json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp   各节点共享的简单辅助代码，由工具保持一致
 ├── tests/
 │   ├── check.hpp CMakeLists.txt                                                                                                             测试框架及其构建方式
 │   ├── test_config.cpp                                                                                                                      设置文件、滤波器和校准
 │   ├── test_head.cpp                                                                                                                        模拟泵和传感器上的贴装头：吸取、丢失、联锁、安全状态
+│   ├── test_sensor.cpp                                                                                                                      模拟与数字真空检测、报警和 X/Y 联锁
 │   └── test_node.cpp                                                                                                                        网络用语、令牌、安全状态和契约页面
 ├── docs/
 │   ├── CONTRACT.md                                                                                                                          节点在网络（和链路）上所说的内容

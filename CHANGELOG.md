@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Two ways to sense the vacuum of a nozzle**, chosen for each nozzle with `nozzle_N_sensor` in `head.cfg`: a pressure sensor read as a number (filtered, calibrated, with a band between the target and the hold limit) or a vacuum switch read as a level (debounced, with its polarity as a setting). The pick, the hold and the loss work the same for both.
+- **Alarms of a nozzle:** a part lost, a vacuum not reached, a sensor out of range (a number that cannot be real, or a level that is neither high nor low) and a sensor frozen (a number that does not change, or a switch that says vacuum with nothing pulling), each with a code, shown in the answers until a person acknowledges.
+- **Calibration only for the pressure sensors:** a nozzle with a switch refuses it with the reason.
+- **Interlock for the X and Y axes of the machine:** the head says in its status when every nozzle is raised to the safe height, which nozzles are not, and grants the permission of `POST /api/xy` only when all are; while the machine holds it, no nozzle is lowered under that height. The height for turning a nozzle plays no part in it, and the tolerance is a setting.
+- **Self-check:** an info code when a pick did not reach the vacuum.
+- **Documents:** new sections of the contract page on the sensors, the alarms and the interlock; five new bench tests in the hardware page.
+- **Tests:** 28 new tests for the sensors and the interlock, 85 in all.
+
 ## [0.0.1] - The logic of the node and its simulator
 
 - **The settings of the node:** `head.cfg` with safe defaults (no token, calibration off, the pump and the valves off in the safe state), ranges for every value, and a refusal with the key for a value out of range or a key nobody knows.

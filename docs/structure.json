@@ -36,14 +36,14 @@
         {
           "name": "head.hpp",
           "desc": {
-            "en": "what the head does with its nozzles, pump and axes",
-            "es": "lo que hace el cabezal con sus boquillas, bomba y ejes",
-            "de": "was der Kopf mit Düsen, Pumpe und Achsen tut",
-            "fr": "ce que fait la tête de ses buses, de sa pompe et de ses axes",
-            "it": "cosa fa la testa con ugelli, pompa e assi",
-            "ja": "ヘッドがノズル、ポンプ、軸に対して行うこと",
-            "zh": "贴装头对吸嘴、泵和轴的处理",
-            "pt": "o que a cabeça faz com os seus bicos, bomba e eixos"
+            "en": "nozzles, pump and axes; analog or digital vacuum sensing; the X/Y lock",
+            "es": "boquillas, bomba y ejes; vacío analógico o digital; el bloqueo X/Y",
+            "de": "Düsen, Pumpe und Achsen; analoges oder digitales Vakuum; die X/Y-Sperre",
+            "fr": "buses, pompe et axes ; vide analogique ou numérique ; le verrou X/Y",
+            "it": "ugelli, pompa e assi; vuoto analogico o digitale; il blocco X/Y",
+            "ja": "ノズル、ポンプ、軸、アナログ/デジタル真空検出、X/Y インターロック",
+            "zh": "吸嘴、气泵和轴；模拟或数字真空检测；X/Y 联锁",
+            "pt": "bicos, bomba e eixos; vácuo analógico ou digital; o bloqueio X/Y"
           }
         },
         {
@@ -63,14 +63,14 @@
         {
           "name": "head_sim.hpp",
           "desc": {
-            "en": "a head on a computer: pump, valves, parts and sensors",
-            "es": "un cabezal en un ordenador: bomba, válvulas, piezas y sensores",
-            "de": "ein Kopf auf einem Rechner: Pumpe, Ventile, Teile und Sensoren",
-            "fr": "une tête sur un ordinateur : pompe, vannes, pièces et capteurs",
-            "it": "una testa su un computer: pompa, valvole, pezzi e sensori",
-            "ja": "コンピュータ上のヘッド：ポンプ、バルブ、部品、センサー",
-            "zh": "计算机上的贴装头：泵、阀门、元件和传感器",
-            "pt": "uma cabeça num computador: bomba, válvulas, peças e sensores"
+            "en": "a head on a computer: pump, valves, parts, sensors, switches",
+            "es": "un cabezal en un ordenador: bomba, válvulas, piezas, sensores y presostatos",
+            "de": "ein Kopf am Rechner: Pumpe, Ventile, Teile, Drucksensoren und Schalter",
+            "fr": "une tête sur ordinateur : pompe, vannes, pièces, capteurs et pressostats",
+            "it": "una testa sul computer: pompa, valvole, pezzi, sensori e pressostati",
+            "ja": "PC 上のヘッド：ポンプ、バルブ、部品、圧力センサーとスイッチ",
+            "zh": "电脑上的贴装头：气泵、阀、元件、压力传感器和开关",
+            "pt": "uma cabeça no computador: bomba, válvulas, peças, sensores e pressóstatos"
           }
         },
         {
@@ -142,6 +142,19 @@
             "ja": "模擬ポンプとセンサー上のヘッド：吸着、脱落、インターロック、安全状態",
             "zh": "模拟泵和传感器上的贴装头：吸取、丢失、联锁、安全状态",
             "pt": "a cabeça com bomba e sensores simulados: recolhas, perdas, bloqueios, estado seguro"
+          }
+        },
+        {
+          "name": "test_sensor.cpp",
+          "desc": {
+            "en": "analog and digital sensing, alarms, and the X/Y lock",
+            "es": "vacío analógico y digital, alarmas y el bloqueo X/Y",
+            "de": "analoge und digitale Vakuumerfassung, Alarme und die X/Y-Sperre",
+            "fr": "vide analogique et numérique, alarmes et verrou X/Y",
+            "it": "vuoto analogico e digitale, allarmi e blocco X/Y",
+            "ja": "アナログ/デジタル真空検出、アラーム、X/Y インターロック",
+            "zh": "模拟与数字真空检测、报警和 X/Y 联锁",
+            "pt": "vácuo analógico e digital, alarmes e o bloqueio X/Y"
           }
         },
         {

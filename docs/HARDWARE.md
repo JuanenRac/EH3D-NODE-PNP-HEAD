@@ -10,7 +10,7 @@ Nothing in this page has been built or tried: it is the preliminary shape of the
 | Vacuum pump | Makes the vacuum for the nozzles | a small diaphragm pump; the vacuum it reaches with the hoses and nozzles of the head is not measured | no |
 | Valves | One per nozzle: opens the vacuum | solenoid valves with a driver each | no |
 | Puff of air | Lets a part go | a second port of the valve or a separate small valve | no |
-| Pressure sensors | One per nozzle line | gauge pressure sensors, analogue or digital; the range needed is not measured | no |
+| Vacuum sensors | One per nozzle line, chosen for each nozzle in the settings (`nozzle_N_sensor`) | a gauge pressure sensor read as a number (analog), or a vacuum switch read as a level (digital); the range needed and the pressure at which a switch makes and lets go are not measured | no |
 | Z actuators | One per nozzle | stepper with a screw, or another; the travel is a setting | no |
 | Rotation motors | One per nozzle | steppers with a driver that has a serial interface; the turn is a setting | no |
 | Lights | The camera looking up and the one looking down | LEDs with PWM drivers | no |
@@ -33,6 +33,11 @@ The node is tried on a computer against a simulator. Each test below is what a p
 | H-08 | Stop the polls of the server with a part held | The pump stops, the valves close, the nozzles go up and the lights go out; the part falls unless the safe vacuum is on hold |
 | H-09 | Unplug a pressure sensor | HEAD-S01 for that nozzle only |
 | H-10 | Cut the power during a pick and switch it on again | The head wakes up with the pump off and the valves closed |
+| H-11 | A vacuum switch on a nozzle (`nozzle_N_sensor = digital`): raise the vacuum slowly and let it fall slowly against a reference gauge | The pressure at which the switch makes and the one at which it lets go (its hysteresis); a pick over a real part holds, and the level the switch gives for "vacuum" matches `digital_active_high` |
+| H-12 | The same switch on an oscilloscope while the vacuum changes | How long the level bounces; set `digital_debounce_ms` above it and below `vacuum_settle_ms`; no pick is lost to a flicker |
+| H-13 | One head with a nozzle on a switch and a nozzle on a pressure sensor, the same part on both | Both hold; the number of the pressure sensor agrees with the point where the switch changes; HEAD-V02 on both when the part is taken away |
+| H-14 | Unplug a switch, then put a short on its line, then leave it floating | A level that is neither high nor low is HEAD-S01 for that nozzle only; a switch stuck on is HEAD-S02 after `pressure_stuck_ms`; write down what the electronics gives in each case |
+| H-15 | The interlock of X and Y: with one nozzle just under `z_safe_mm`, ask `POST /api/xy?moving=1`; then raise it and ask again; then try to lower a nozzle while the machine moves | The permission is refused with the nozzle down and given with it up; the lowering is refused while the machine holds it; measure the time between the request and the answer, and the height at which the nozzle is really clear of the tallest part on the board |
 
 ## Licences
 

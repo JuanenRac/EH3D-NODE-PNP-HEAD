@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-57-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
 </p>
 
 ---
 
-**Ehrlichkeitscheck - was heute tatsächlich läuft:** ein Gerüst mit echter, getesteter Logik und ohne Hardware. Die Regeln des Knotens laufen auf einem Rechner gegen einen Simulator (57 Tests bestehen), aber nichts davon wurde als Firmware gebaut, geflasht oder mit einer Pumpe, einem Ventil, einem Drucksensor oder einer Achse verbunden.
+**Ehrlichkeitscheck - was heute tatsächlich läuft:** ein Gerüst mit echter, getesteter Logik und ohne Hardware. Die Regeln des Knotens laufen auf einem Rechner gegen einen Simulator (85 Tests bestehen), aber nichts davon wurde als Firmware gebaut, geflasht oder mit einer Pumpe, einem Ventil, einem Drucksensor oder einer Achse verbunden.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.1` |
 | Reifegrad | Gerüst |
-| Tests | 57 |
+| Tests | 85 |
 | Technologie-Stack | C++17 (host tests), Python 3.10+ |
 | Auf echter Hardware | Noch nicht auf Hardware ausgeführt |
 
@@ -45,7 +45,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
-| Logik und Simulator | 🟡 | Die Regeln des Knotens laufen gegen einen Simulator mit festem Seed; 57 Tests bestehen auf einem Rechner. |
+| Logik und Simulator | 🟡 | Die Regeln des Knotens laufen gegen einen Simulator mit festem Seed; 85 Tests bestehen auf einem Rechner. |
 | Netzwerkvertrag | 🟡 | Die Worte des Knotens stehen in docs/CONTRACT.md und ein Test schlägt fehl, wenn Seite und Antworten abweichen; das Plugin des Servers nutzt diesen Knoten noch nicht. |
 | Firmware | 🟠 | Die Firmware für die Platine ist noch nicht geschrieben: nur die einfachen Helfer der gemeinsamen Basis sind importiert. |
 | Echte Hardware | 🔴 | Auf einer Pumpe, einem Ventil, einem Drucksensor oder einer Achse ist noch nichts gelaufen. |
@@ -53,6 +53,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 ## 🎯 Überblick
 
 * **Ein Knoten, ein Kopf:** er nimmt Teile mit dem Vakuum jeder Düse auf und setzt sie ab, unterscheidet ein verlorenes Teil von einem nie vorhandenen, bewegt die Z-Achse und die Drehung unter Verriegelungen und geht von selbst in einen sicheren Zustand, wenn er den Server verliert.
+* **Zwei Arten, das Vakuum zu erfassen, und eine Sperre für die Achsen:** jede Düse hat einen Drucksensor (gefiltert, kalibriert, mit Band) oder einen Vakuumschalter (entprellt), gewählt in `head.cfg`, mit Alarmen für verlorenes Teil, nicht erreichtes Vakuum und Sensor außerhalb des Bereichs oder eingefroren; der Kopf meldet außerdem, wann alle Düsen auf die sichere Höhe angehoben sind, damit die Maschine in X und Y fahren darf, und verweigert in der Zeit das Absenken einer Düse.
 
 ## 🧩 Rolle in EH3D
 
@@ -90,6 +91,7 @@ POST /api/light?up=P&down=Q              the two lights, in percent
 POST /api/stop                           stop every move (the vacuum is not touched)
 POST /api/ack[?n=N]                      clear a fault that is gone (or the safe state, without n)
 POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   if the settings allow it
+POST /api/xy?moving=1|0                    the machine asks to move in X and Y (only with every nozzle raised) or says it stopped
 ```
 
 ## ⚙️ Konfiguration
@@ -110,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Tests
 
-57 Tests: C++-Tests auf dem Rechner mit festem Seed (sie lassen den Simulator und die Netzwerkworte laufen und vergleichen die Vertragsseite mit den Antworten) und Python-Tests des Repositorys. Die CI führt die C++-Tests auch mit AddressSanitizer und UBSan aus.
+85 Tests: C++-Tests auf dem Rechner mit festem Seed (sie lassen den Simulator und die Netzwerkworte laufen und vergleichen die Vertragsseite mit den Antworten) und Python-Tests des Repositorys. Die CI führt die C++-Tests auch mit AddressSanitizer und UBSan aus.
 
 ## 🏗️ Build und Veröffentlichung
 
@@ -129,14 +131,15 @@ Die Version steht in `eh3d.project.json` und jede Version hat ihren Eintrag in [
 EH3D-NODE-PNP-HEAD/
 ├── core/
 │   ├── head_config.hpp cfg_text.hpp                                                                                                         die Einstellungsdatei und ihre sicheren Standardwerte
-│   ├── head.hpp                                                                                                                             was der Kopf mit Düsen, Pumpe und Achsen tut
+│   ├── head.hpp                                                                                                                             Düsen, Pumpe und Achsen; analoges oder digitales Vakuum; die X/Y-Sperre
 │   ├── head_node.hpp version.hpp                                                                                                            die Worte des Knotens im Netzwerk
-│   ├── head_sim.hpp                                                                                                                         ein Kopf auf einem Rechner: Pumpe, Ventile, Teile und Sensoren
+│   ├── head_sim.hpp                                                                                                                         ein Kopf am Rechner: Pumpe, Ventile, Teile, Drucksensoren und Schalter
 │   └── json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp   einfache Helfer, die alle Knoten teilen und ein Werkzeug gleich hält
 ├── tests/
 │   ├── check.hpp CMakeLists.txt                                                                                                             der Rahmen der Tests und wie sie gebaut werden
 │   ├── test_config.cpp                                                                                                                      die Einstellungsdatei, der Filter und die Kalibrierung
 │   ├── test_head.cpp                                                                                                                        der Kopf an simulierter Pumpe und Sensoren: Aufnahmen, Verluste, Verriegelungen, sicherer Zustand
+│   ├── test_sensor.cpp                                                                                                                      analoge und digitale Vakuumerfassung, Alarme und die X/Y-Sperre
 │   └── test_node.cpp                                                                                                                        die Netzwerkworte, das Token, der sichere Zustand und die Vertragsseite
 ├── docs/
 │   ├── CONTRACT.md                                                                                                                          was der Knoten im Netzwerk (und in der Kette) sagt

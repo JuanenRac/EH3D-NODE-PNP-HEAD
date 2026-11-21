@@ -8,7 +8,12 @@
 //  * A pick opens the valve of one nozzle and waits for the vacuum: if it reaches the target in time a part is held, if not the pick failed and the valve closes again.
 //    A held part whose vacuum falls under the hold limit for vacuum_loss_ms is lost: the valve closes and the nozzle holds a fault until a person acknowledges it.
 //  * A part is released (valve closed, a short puff) only when the nozzle is at or below release_max_z_mm; a nozzle is turned only when it is at or above rotate_min_z_mm.
-//  * A sensor that reads what cannot be real, or does not change at all while a valve is open, is a fault: the vacuum of that nozzle cannot be trusted.
+//  * The vacuum of a nozzle is sensed in one of two ways, chosen for each nozzle in the settings: a pressure sensor read as a number (averaged, calibrated, with a band
+//    between the target and the hold limit) or a vacuum switch read as a level (on or off, debounced). The rules of the pick, the hold and the loss are the same for both.
+//  * A sensor that reads what cannot be real (a number out of range, a level between high and low), or that does not change at all while a valve is open (a number),
+//    or that says vacuum with nothing pulling (a level), is a fault: the vacuum of that nozzle cannot be trusted.
+//  * The nozzles are "raised" when they are at or above z_safe_mm (with a small tolerance). The machine asks the head for permission before it moves its X and Y axes
+//    and gets it only when every nozzle is raised; while it has it, no nozzle is lowered under that height. rotate_min_z_mm is for turning and is not used for this.
 //  * When the server is not heard for link_lost_ms the head is in its safe state: the pump stops, the valves close (unless safe_vacuum is hold), the nozzles go up and the
 //    lights go out. Nothing moves down or takes a part until a person acknowledges.
 #pragma once
@@ -23,7 +28,9 @@
 namespace pnp_head {
 
 enum class Phase { Idle, Evacuating, Holding, Releasing, Fault };
-enum class Fault { None, VacuumLost, PumpOverrun, SensorFault };
+enum class Fault { None, VacuumLost, PumpOverrun, SensorFault, SensorFrozen };
+/// What a nozzle reports as an alarm: the last thing that went wrong with its vacuum or its sensor, until a person acknowledges it or the next pick starts.
+enum class Alarm { None, VacuumNotReached, PartLost, SensorRange, SensorFrozen };
 
 inline const char* phase_text(Phase p) {
     switch (p) {
@@ -43,12 +50,38 @@ inline const char* fault_code(Fault f) {
         case Fault::VacuumLost: return "HEAD-V02";
         case Fault::PumpOverrun: return "HEAD-P01";
         case Fault::SensorFault: return "HEAD-S01";
+        case Fault::SensorFrozen: return "HEAD-S02";
     }
     return "none";
 }
 
+inline const char* alarm_text(Alarm a) {
+    switch (a) {
+        case Alarm::None: return "none";
+        case Alarm::VacuumNotReached: return "vacuum_not_reached";
+        case Alarm::PartLost: return "part_lost";
+        case Alarm::SensorRange: return "sensor_out_of_range";
+        case Alarm::SensorFrozen: return "sensor_frozen";
+    }
+    return "none";
+}
+
+inline const char* alarm_code(Alarm a) {
+    switch (a) {
+        case Alarm::None: return "none";
+        case Alarm::VacuumNotReached: return "HEAD-V01";
+        case Alarm::PartLost: return "HEAD-V02";
+        case Alarm::SensorRange: return "HEAD-S01";
+        case Alarm::SensorFrozen: return "HEAD-S02";
+    }
+    return "none";
+}
+
+/// Every code an alarm can carry, for the page of the contract and its test.
+inline std::vector<const char*> all_alarm_codes() { return {"HEAD-V01", "HEAD-V02", "HEAD-S01", "HEAD-S02"}; }
+
 /// Every code a nozzle can hold, and the one of the safe state, for the page of the contract and its test.
-inline std::vector<const char*> all_fault_codes() { return {"HEAD-V02", "HEAD-P01", "HEAD-S01", "HEAD-L01"}; }
+inline std::vector<const char*> all_fault_codes() { return {"HEAD-V02", "HEAD-P01", "HEAD-S01", "HEAD-S02", "HEAD-L01"}; }
 
 struct Result {
     bool ok = true;
@@ -58,6 +91,14 @@ struct Result {
 struct Nozzle {
     Phase phase = Phase::Idle;
     Fault fault = Fault::None;
+    Alarm alarm = Alarm::None;
+    bool vac_ok = false;                  // the vacuum is there: a number at or above the target (until it falls under the hold limit), or a debounced level
+    bool level_ok = false;                // a digital sensor: the debounced level
+    bool level_candidate = false;         // a digital sensor: the level seen now, before it has stayed long enough
+    bool level_invalid = false;           // a digital sensor: the reading is neither high nor low
+    std::uint32_t level_since_ms = 0;
+    std::uint32_t invalid_since_ms = 0;
+    std::uint32_t idle_vac_since_ms = 0;  // a digital sensor: since when it says vacuum with the valve closed (0: it does not)
     bool valve = false;
     bool blow = false;
     double z = 0.0, z_target = 0.0;
@@ -111,6 +152,7 @@ public:
         z.loss_since_ms = 0;
         z.same_since_ms = now;
         z.last_result = "evacuating";
+        if (z.alarm == Alarm::VacuumNotReached) z.alarm = Alarm::None;
         update_pump();
         return r;
     }
@@ -154,6 +196,8 @@ public:
         if (!(mm >= cfg_.z_min_mm && mm <= cfg_.z_max_mm)) return no("out_of_range");
         Nozzle& z = at(n);
         const bool down = mm < z.z_target - 1e-9;
+        // while the machine moves in X and Y with the nozzles up, none of them goes under the height where they count as raised
+        if (xy_moving_ && mm < cfg_.z_safe_mm - cfg_.interlock_z_tolerance_mm - 1e-9) return no("interlock_xy_moving");
         if (down && safe_) return no("safe_state");
         if (down && z.phase == Phase::Fault) return no("fault");
         // a nozzle that is turning is not lowered under the height where turning is allowed
@@ -170,6 +214,38 @@ public:
         if (z.phase == Phase::Fault) return no("fault");
         if (z.z < cfg_.rotate_min_z_mm - 1e-9 || z.z_target < cfg_.rotate_min_z_mm - 1e-9) return no("interlock_rotate_low");
         z.a_target = deg;
+        return Result();
+    }
+
+    /// A nozzle is raised when it is, and is going to stay, at or above the safe height (less the tolerance).
+    bool raised(int n) const {
+        const Nozzle& z = nozzle(n);
+        const double floor_mm = cfg_.z_safe_mm - cfg_.interlock_z_tolerance_mm - 1e-9;
+        return z.z >= floor_mm && z.z_target >= floor_mm;
+    }
+    /// Every nozzle is raised: the machine may move in X and Y.
+    bool xy_clear() const {
+        for (int n = 1; n <= cfg_.nozzles; ++n) if (!raised(n)) return false;
+        return true;
+    }
+    /// The numbers of the nozzles that are not raised, separated by commas.
+    std::string xy_blocking() const {
+        std::string out;
+        for (int n = 1; n <= cfg_.nozzles; ++n) {
+            if (raised(n)) continue;
+            if (!out.empty()) out += ",";
+            out += std::to_string(n);
+        }
+        return out;
+    }
+    bool xy_moving() const { return xy_moving_; }
+
+    /// The machine asks to move in X and Y (`moving` true) or says it has stopped (false). The permission is given only while every nozzle is raised, and while it lasts no
+    /// nozzle is lowered under the safe height. Letting it go is always accepted.
+    Result xy_move(bool moving) {
+        if (!moving) { xy_moving_ = false; return Result(); }
+        if (!xy_clear()) return no("interlock_xy_nozzle_low");
+        xy_moving_ = true;
         return Result();
     }
 
@@ -194,13 +270,20 @@ public:
             if (!watching_ || now - last_heard_ > static_cast<std::uint32_t>(cfg_.link_lost_ms)) return no("still_active");
             safe_ = false;
             safe_reason_ = "none";
+            xy_moving_ = false;  // a person has looked at the head: the permission to move in X and Y is asked for again
             return Result{true, "cleared"};
         }
         if (!valid(n)) return no("bad_nozzle");
         Nozzle& z = at(n);
-        if (z.phase != Phase::Fault) return Result{true, "not_held"};
-        if (z.fault == Fault::SensorFault && !plausible(z)) return no("still_active");
+        if (z.phase != Phase::Fault) {
+            if (z.alarm == Alarm::None) return Result{true, "not_held"};
+            z.alarm = Alarm::None;  // the alarm of a pick that did not reach the vacuum
+            return Result{true, "cleared"};
+        }
+        if (z.fault == Fault::SensorFault && sensor_out_of_range(n, z)) return no("still_active");
+        if (z.fault == Fault::SensorFrozen && cfg_.sensor[n - 1] == SensorKind::Digital && z.level_ok) return no("still_active");
         z.fault = Fault::None;
+        z.alarm = Alarm::None;
         z.phase = Phase::Idle;
         z.since_ms = now;
         z.same_since_ms = now;
@@ -211,6 +294,7 @@ public:
     Result calibrate(int n, bool zero, double known_kpa) {
         if (!valid(n)) return no("bad_nozzle");
         if (!cfg_.calibration_enabled) return no("disabled");
+        if (cfg_.sensor[n - 1] != SensorKind::Analog) return no("not_analog");  // a switch has no scale to set
         Nozzle& z = at(n);
         if (z.phase != Phase::Idle || z.valve || pump_) return no("busy");
         if (z.ring.empty()) return no("no_reading");
@@ -237,7 +321,7 @@ public:
     /// Moves time on by `dt_ms`. `raw` holds the reading of the pressure sensor of each nozzle, in the order of the nozzles.
     void tick(std::uint32_t now, std::uint32_t dt_ms, const double* raw) {
         if (watching_ && !safe_ && now - last_heard_ > static_cast<std::uint32_t>(cfg_.link_lost_ms)) enter_safe("server_lost");
-        for (int i = 0; i < cfg_.nozzles; ++i) step_nozzle(nozzles_[static_cast<std::size_t>(i)], now, dt_ms, raw[i]);
+        for (int i = 0; i < cfg_.nozzles; ++i) step_nozzle(nozzles_[static_cast<std::size_t>(i)], i, now, dt_ms, raw[i]);
         update_pump();
         if (pump_) pump_run_ms_ += dt_ms; else pump_run_ms_ = 0;
         if (pump_ && pump_run_ms_ > static_cast<std::uint32_t>(cfg_.pump_max_run_s) * 1000u) {
@@ -254,6 +338,11 @@ private:
 
     bool plausible(const Nozzle& z) const { return z.kpa <= cfg_.pressure_max_kpa && z.kpa >= -10.0; }
 
+    /// The reading cannot be real: a number outside what the sensor can give, or a level that is neither high nor low.
+    bool sensor_out_of_range(int n, const Nozzle& z) const {
+        return cfg_.sensor[n - 1] == SensorKind::Digital ? z.level_invalid : !plausible(z);
+    }
+
     void update_pump() {
         bool any = false;
         for (const Nozzle& z : nozzles_) if (z.valve) any = true;
@@ -268,10 +357,64 @@ private:
         z.blow = false;
         z.since_ms = now;
         z.loss_since_ms = 0;
-        z.last_result = f == Fault::VacuumLost ? "vacuum_lost" : f == Fault::PumpOverrun ? "pump_overrun" : "sensor_fault";
-        if (f == Fault::VacuumLost) ++z.losses;
+        z.last_result = f == Fault::VacuumLost ? "vacuum_lost" : f == Fault::PumpOverrun ? "pump_overrun" : f == Fault::SensorFrozen ? "sensor_frozen" : "sensor_fault";
+        if (f == Fault::VacuumLost) { ++z.losses; z.alarm = Alarm::PartLost; }
+        else if (f == Fault::SensorFault) z.alarm = Alarm::SensorRange;
+        else if (f == Fault::SensorFrozen) z.alarm = Alarm::SensorFrozen;
         z.z_target = z.z;  // nothing keeps moving down while a nozzle holds a fault; going up is still allowed
     }
+
+    /// A pressure sensor: an average of the last pressure_samples, turned into kPa, with a band between the target and the hold limit; a sensor that cannot be right is a fault.
+    void read_number(Nozzle& z, std::uint32_t now, double raw) {
+        const std::size_t want = static_cast<std::size_t>(cfg_.pressure_samples);
+        if (z.ring.size() != want) { z.ring.assign(want, raw); z.ring_at = 0; }
+        z.ring[z.ring_at] = raw;
+        z.ring_at = (z.ring_at + 1) % want;
+        double avg = 0;
+        for (double v : z.ring) avg += v;
+        avg /= static_cast<double>(want);
+        z.kpa = (avg - cfg_.pressure_zero) * cfg_.pressure_scale;
+        if (z.kpa >= cfg_.vacuum_target_kpa) z.vac_ok = true; else if (z.kpa < cfg_.vacuum_hold_min_kpa) z.vac_ok = false;
+        // a sensor that does not change at all while a valve is open is frozen
+        if (z.valve) {
+            if (raw != z.last_raw) z.same_since_ms = now;
+            else if (now - z.same_since_ms >= static_cast<std::uint32_t>(cfg_.pressure_stuck_ms)) raise(z, Fault::SensorFrozen, now);
+        } else {
+            z.same_since_ms = now;
+        }
+        z.last_raw = raw;
+        if (!plausible(z) && z.phase != Phase::Fault && z.ring.size() == want) raise(z, Fault::SensorFault, now);
+    }
+
+    /// A vacuum switch: a level that counts after it has stayed the same for digital_debounce_ms. A level that is neither high nor low for that long is a sensor out of
+    /// range; a switch that says vacuum for pressure_stuck_ms while the valve is closed and nothing is pulling is stuck.
+    void read_level(Nozzle& z, std::uint32_t now, double raw) {
+        const bool high = raw >= 0.8, low = raw <= 0.2;
+        const std::uint32_t debounce = static_cast<std::uint32_t>(cfg_.digital_debounce_ms);
+        z.kpa = 0.0;  // a switch does not measure
+        if (!high && !low) {
+            if (!z.level_invalid) { z.level_invalid = true; z.invalid_since_ms = now; }
+            else if (now - z.invalid_since_ms >= debounce && z.phase != Phase::Fault) raise(z, Fault::SensorFault, now);
+        } else {
+            z.level_invalid = false;
+            const bool vacuum = cfg_.digital_active_high ? high : low;
+            if (vacuum != z.level_candidate) { z.level_candidate = vacuum; z.level_since_ms = now; }
+            if (z.level_candidate != z.level_ok && now - z.level_since_ms >= debounce) z.level_ok = z.level_candidate;
+        }
+        z.vac_ok = z.level_ok;
+        const bool pulling = z.valve || z.blow || z.phase == Phase::Holding || z.phase == Phase::Evacuating || z.phase == Phase::Releasing;
+        if (z.level_ok && !pulling && z.phase != Phase::Fault) {
+            if (z.idle_vac_since_ms == 0) z.idle_vac_since_ms = now == 0 ? 1 : now;
+            else if (now - z.idle_vac_since_ms >= static_cast<std::uint32_t>(cfg_.pressure_stuck_ms)) raise(z, Fault::SensorFrozen, now);
+        } else {
+            z.idle_vac_since_ms = 0;
+        }
+    }
+
+    /// The vacuum has reached the target (a number), or the switch says it is there.
+    bool reached(int index, const Nozzle& z) const { return cfg_.sensor[index] == SensorKind::Digital ? z.level_ok : z.kpa >= cfg_.vacuum_target_kpa; }
+    /// The vacuum of a held part is gone: a number under the hold limit, or the switch says no.
+    bool gone(int index, const Nozzle& z) const { return cfg_.sensor[index] == SensorKind::Digital ? !z.level_ok : z.kpa < cfg_.vacuum_hold_min_kpa; }
 
     void enter_safe(const char* reason) {
         safe_ = true;
@@ -290,25 +433,8 @@ private:
         update_pump();
     }
 
-    void step_nozzle(Nozzle& z, std::uint32_t now, std::uint32_t dt_ms, double raw) {
-        // the reading: an average of the last pressure_samples
-        const std::size_t want = static_cast<std::size_t>(cfg_.pressure_samples);
-        if (z.ring.size() != want) { z.ring.assign(want, raw); z.ring_at = 0; }
-        z.ring[z.ring_at] = raw;
-        z.ring_at = (z.ring_at + 1) % want;
-        double avg = 0;
-        for (double v : z.ring) avg += v;
-        avg /= static_cast<double>(want);
-        z.kpa = (avg - cfg_.pressure_zero) * cfg_.pressure_scale;
-        // a sensor that cannot be right
-        if (z.valve) {
-            if (raw != z.last_raw) z.same_since_ms = now;
-            else if (now - z.same_since_ms >= static_cast<std::uint32_t>(cfg_.pressure_stuck_ms)) raise(z, Fault::SensorFault, now);
-        } else {
-            z.same_since_ms = now;
-        }
-        z.last_raw = raw;
-        if (!plausible(z) && z.phase != Phase::Fault && z.ring.size() == want) raise(z, Fault::SensorFault, now);
+    void step_nozzle(Nozzle& z, int index, std::uint32_t now, std::uint32_t dt_ms, double raw) {
+        if (cfg_.sensor[index] == SensorKind::Digital) read_level(z, now, raw); else read_number(z, now, raw);
         // the move
         const double dz = cfg_.z_speed_mm_s * dt_ms / 1000.0;
         if (std::fabs(z.z_target - z.z) <= dz) z.z = z.z_target; else z.z += z.z_target > z.z ? dz : -dz;
@@ -317,7 +443,7 @@ private:
         // the phase
         switch (z.phase) {
             case Phase::Evacuating:
-                if (z.kpa >= cfg_.vacuum_target_kpa) {
+                if (reached(index, z)) {
                     z.phase = Phase::Holding;
                     z.since_ms = now;
                     z.loss_since_ms = 0;
@@ -328,11 +454,12 @@ private:
                     z.phase = Phase::Idle;
                     z.since_ms = now;
                     z.last_result = "vacuum_not_reached";
+                    z.alarm = Alarm::VacuumNotReached;
                     ++z.failed_picks;
                 }
                 break;
             case Phase::Holding:
-                if (z.kpa < cfg_.vacuum_hold_min_kpa) {
+                if (gone(index, z)) {
                     if (z.loss_since_ms == 0) z.loss_since_ms = now == 0 ? 1 : now;
                     else if (now - z.loss_since_ms >= static_cast<std::uint32_t>(cfg_.vacuum_loss_ms)) raise(z, Fault::VacuumLost, now);
                 } else {
@@ -356,6 +483,7 @@ private:
     std::uint32_t last_heard_ = 0;
     int light_up_ = 0, light_down_ = 0;
     bool calibrated_ = false;
+    bool xy_moving_ = false;
 };
 
 }  // namespace pnp_head

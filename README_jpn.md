@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-57-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さの確認 - 今日実際に動くもの：** 実際にテストされたロジックを持つが、ハードウェアはない骨組みです。ノードの規則はコンピュータ上でシミュレータに対して動作します（57 件のテストが成功）が、ここにあるものはファームウェアとしてビルドされたことも、書き込まれたことも、ポンプ、バルブ、圧力センサー、軸に接続されたこともありません。
+**正直さの確認 - 今日実際に動くもの：** 実際にテストされたロジックを持つが、ハードウェアはない骨組みです。ノードの規則はコンピュータ上でシミュレータに対して動作します（85 件のテストが成功）が、ここにあるものはファームウェアとしてビルドされたことも、書き込まれたことも、ポンプ、バルブ、圧力センサー、軸に接続されたこともありません。
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | バージョン | `0.0.1` |
 | 成熟度 | 足場 |
-| テスト | 57 |
+| テスト | 85 |
 | 技術スタック | C++17 (host tests), Python 3.10+ |
 | 実機での動作 | まだハードウェアでは実行していません |
 
@@ -45,7 +45,7 @@
 
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
-| ロジックとシミュレータ | 🟡 | ノードの規則は固定シードのシミュレータに対して動作し、57 件のテストがコンピュータ上で成功します。 |
+| ロジックとシミュレータ | 🟡 | ノードの規則は固定シードのシミュレータに対して動作し、85 件のテストがコンピュータ上で成功します。 |
 | ネットワーク契約 | 🟡 | ノードの語は docs/CONTRACT.md に書かれており、ページと応答が異なるとテストが失敗します。サーバーのプラグインはまだこのノードを使っていません。 |
 | ファームウェア | 🟠 | ボード用のファームウェアはまだ書かれていません。共有ベースの単純な補助部分だけを取り込んでいます。 |
 | 実機ハードウェア | 🔴 | ポンプ、バルブ、圧力センサー、軸では何も動いていません。 |
@@ -53,6 +53,7 @@
 ## 🎯 概要
 
 * **1 つのノード、1 つのヘッド：** 各ノズルの真空で部品を吸着・解放し、失った部品と最初から無かった部品を区別し、Z 軸と回転をインターロック下で動かし、サーバーを失うと自分で安全状態に移ります。
+* **真空の検出は 2 通り、軸のインターロックあり：** 各ノズルは、`head.cfg` で選んだ圧力センサー（フィルター・校正・ヒステリシス帯付き）か真空スイッチ（チャタリング除去付き）を持ち、部品の脱落、真空未到達、センサーの範囲外や固着をアラームで知らせます。ヘッドは全ノズルが安全高さまで上がっていること（機械が X・Y に動いてよい条件）も伝え、その間のノズルの下降を拒否します。
 
 ## 🧩 EH3D での役割
 
@@ -90,6 +91,7 @@ POST /api/light?up=P&down=Q              the two lights, in percent
 POST /api/stop                           stop every move (the vacuum is not touched)
 POST /api/ack[?n=N]                      clear a fault that is gone (or the safe state, without n)
 POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   if the settings allow it
+POST /api/xy?moving=1|0                    the machine asks to move in X and Y (only with every nozzle raised) or says it stopped
 ```
 
 ## ⚙️ 設定
@@ -110,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 テスト
 
-57 件のテスト：固定シードの C++ ホストテスト（シミュレータとネットワークの語を動かし、契約ページと応答を比較）と、リポジトリの Python テストです。CI は C++ テストを AddressSanitizer と UBSan でも実行します。
+85 件のテスト：固定シードの C++ ホストテスト（シミュレータとネットワークの語を動かし、契約ページと応答を比較）と、リポジトリの Python テストです。CI は C++ テストを AddressSanitizer と UBSan でも実行します。
 
 ## 🏗️ ビルドとリリース
 
@@ -129,14 +131,15 @@ python -I -m unittest discover -s tools -p "test_*.py"
 EH3D-NODE-PNP-HEAD/
 ├── core/
 │   ├── head_config.hpp cfg_text.hpp                                                                                                         設定ファイルと安全な既定値
-│   ├── head.hpp                                                                                                                             ヘッドがノズル、ポンプ、軸に対して行うこと
+│   ├── head.hpp                                                                                                                             ノズル、ポンプ、軸、アナログ/デジタル真空検出、X/Y インターロック
 │   ├── head_node.hpp version.hpp                                                                                                            ネットワーク上のノードの語
-│   ├── head_sim.hpp                                                                                                                         コンピュータ上のヘッド：ポンプ、バルブ、部品、センサー
+│   ├── head_sim.hpp                                                                                                                         PC 上のヘッド：ポンプ、バルブ、部品、圧力センサーとスイッチ
 │   └── json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp   ノード間で共有する単純な補助部分。ツールで同一に保つ
 ├── tests/
 │   ├── check.hpp CMakeLists.txt                                                                                                             テストの枠組みとビルド方法
 │   ├── test_config.cpp                                                                                                                      設定ファイル、フィルタ、校正
 │   ├── test_head.cpp                                                                                                                        模擬ポンプとセンサー上のヘッド：吸着、脱落、インターロック、安全状態
+│   ├── test_sensor.cpp                                                                                                                      アナログ/デジタル真空検出、アラーム、X/Y インターロック
 │   └── test_node.cpp                                                                                                                        ネットワークの語、トークン、安全状態、契約ページ
 ├── docs/
 │   ├── CONTRACT.md                                                                                                                          ノードがネットワーク（とチェーン）上で伝えること

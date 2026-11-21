@@ -18,6 +18,9 @@ constexpr int kMaxNozzles = 6;
 
 enum class SafeVacuum { Off, Hold };
 
+/// How the vacuum of one nozzle is sensed: a pressure sensor read as a number (filtered, calibrated) or a vacuum switch read as a level (on or off).
+enum class SensorKind { Analog, Digital };
+
 struct Settings {
     // the link
     std::string name = "pnp-head";
@@ -50,10 +53,15 @@ struct Settings {
     double pressure_max_kpa = 101.0;    // 20..200: a reading above this cannot be real
     int pressure_stuck_ms = 3000;       // 500..60000: a reading that does not change at all for this long while a valve is open is a dead sensor
     int pressure_samples = 4;           // 1..32: readings averaged
+    SensorKind sensor[kMaxNozzles] = {SensorKind::Analog, SensorKind::Analog, SensorKind::Analog, SensorKind::Analog, SensorKind::Analog, SensorKind::Analog};  // nozzle_N_sensor = analog|digital
+    bool digital_active_high = true;    // a digital sensor: a high level means that the vacuum is there (off: a low level does)
+    int digital_debounce_ms = 20;       // 1..500: a digital level counts only after it has stayed the same this long; a level between the two (neither high nor low) for this long is a sensor out of range
     bool calibration_enabled = false;   // the calibration of the sensors changes what the limits mean: off until a person switches it on
     // the lights, in percent, at the start
     int light_up_pct = 0;               // 0..100
     int light_down_pct = 0;             // 0..100
+    // the interlock of the X and Y axes of the machine: the nozzles are "raised" when they are at or above z_safe_mm (rotate_min_z_mm is for turning only and is not used here)
+    double interlock_z_tolerance_mm = 0.5;  // 0..5: how far under z_safe_mm a nozzle may be and still count as raised
     // the watch over the server and what the node does when it is lost
     int link_lost_ms = 2000;            // 500..600000
     bool safe_z_retract = true;         // go up to z_safe_mm in the safe state
@@ -66,6 +74,7 @@ struct Problem {
 };
 
 inline const char* safe_vacuum_text(SafeVacuum v) { return v == SafeVacuum::Hold ? "hold" : "off"; }
+inline const char* sensor_text(SensorKind k) { return k == SensorKind::Digital ? "digital" : "analog"; }
 
 namespace detail {
 
@@ -85,6 +94,16 @@ inline void set_bool(const std::string& key, const std::string& v, bool& target,
     bool b = false;
     if (!cfg::parse_bool(v, b)) { out.push_back({key, "bad_value"}); return; }
     target = b;
+}
+
+/// `nozzle_N_sensor` with N from 1 to 6: gives N.
+inline bool sensor_key(const std::string& key, long long& n) {
+    const std::string head = "nozzle_", tail = "_sensor";
+    if (key.size() != head.size() + 1 + tail.size() || key.compare(0, head.size(), head) != 0 || key.compare(key.size() - tail.size(), tail.size(), tail) != 0) return false;
+    const char c = key[head.size()];
+    if (c < '1' || c > '0' + kMaxNozzles) return false;
+    n = c - '0';
+    return true;
 }
 
 inline bool name_ok(const std::string& n) {
@@ -130,6 +149,10 @@ inline std::vector<Problem> parse_settings(const std::string& text, Settings& s)
             else if (key == "pressure_max_kpa") detail::set_double(key, v, 20, 200, s.pressure_max_kpa, out);
             else if (key == "pressure_stuck_ms") detail::set_int(key, v, 500, 60000, s.pressure_stuck_ms, out);
             else if (key == "pressure_samples") detail::set_int(key, v, 1, 32, s.pressure_samples, out);
+            else if (key == "digital_active_high") detail::set_bool(key, v, s.digital_active_high, out);
+            else if (key == "digital_debounce_ms") detail::set_int(key, v, 1, 500, s.digital_debounce_ms, out);
+            else if (key == "interlock_z_tolerance_mm") detail::set_double(key, v, 0, 5, s.interlock_z_tolerance_mm, out);
+            else if (detail::sensor_key(key, n)) { if (v == "analog") s.sensor[n - 1] = SensorKind::Analog; else if (v == "digital") s.sensor[n - 1] = SensorKind::Digital; else out.push_back({key, "bad_value"}); }
             else if (key == "calibration_enabled") detail::set_bool(key, v, s.calibration_enabled, out);
             else if (key == "light_up_pct") detail::set_int(key, v, 0, 100, s.light_up_pct, out);
             else if (key == "light_down_pct") detail::set_int(key, v, 0, 100, s.light_down_pct, out);
@@ -146,21 +169,25 @@ inline std::vector<Problem> parse_settings(const std::string& text, Settings& s)
     if (!(s.z_min_mm < s.z_max_mm) || s.z_safe_mm < s.z_min_mm || s.z_safe_mm > s.z_max_mm) { out.push_back({"z_safe_mm", "out_of_range"}); s.z_min_mm = d.z_min_mm; s.z_max_mm = d.z_max_mm; s.z_safe_mm = d.z_safe_mm; }
     if (s.rotate_min_z_mm > s.z_max_mm) { out.push_back({"rotate_min_z_mm", "out_of_range"}); s.rotate_min_z_mm = s.z_max_mm; }  // turn only when fully up: the safest
     if (s.release_max_z_mm < s.z_min_mm) { out.push_back({"release_max_z_mm", "out_of_range"}); s.release_max_z_mm = d.release_max_z_mm; }
+    if (s.digital_debounce_ms >= s.vacuum_settle_ms) { out.push_back({"digital_debounce_ms", "out_of_range"}); s.digital_debounce_ms = d.digital_debounce_ms; s.vacuum_settle_ms = d.vacuum_settle_ms; }  // a level that needs longer than the pick is allowed can never be seen
     return out;
 }
 
 /// The text of the settings as a file (the token is never written).
 inline std::string settings_text(const Settings& s) {
-    char b[2400];
+    char b[3200];
     std::snprintf(b, sizeof b,
                   "name = %s\nport = %u\nnozzles = %d\nz_min_mm = %g\nz_max_mm = %g\nz_safe_mm = %g\nz_speed_mm_s = %g\nrot_min_deg = %g\nrot_max_deg = %g\nrot_speed_deg_s = %g\n"
                   "rotate_min_z_mm = %g\nrelease_max_z_mm = %g\nvacuum_target_kpa = %g\nvacuum_hold_min_kpa = %g\nvacuum_settle_ms = %d\nvacuum_loss_ms = %d\nblow_ms = %d\n"
                   "pump_max_run_s = %d\npressure_zero = %g\npressure_scale = %g\npressure_max_kpa = %g\npressure_stuck_ms = %d\npressure_samples = %d\ncalibration_enabled = %d\n"
-                  "light_up_pct = %d\nlight_down_pct = %d\nlink_lost_ms = %d\nsafe_z_retract = %d\nsafe_vacuum = %s\n",
+                  "light_up_pct = %d\nlight_down_pct = %d\nlink_lost_ms = %d\nsafe_z_retract = %d\nsafe_vacuum = %s\n"
+                  "nozzle_1_sensor = %s\nnozzle_2_sensor = %s\nnozzle_3_sensor = %s\nnozzle_4_sensor = %s\nnozzle_5_sensor = %s\nnozzle_6_sensor = %s\ndigital_active_high = %d\n"
+                  "digital_debounce_ms = %d\ninterlock_z_tolerance_mm = %g\n",
                   s.name.c_str(), static_cast<unsigned>(s.port), s.nozzles, s.z_min_mm, s.z_max_mm, s.z_safe_mm, s.z_speed_mm_s, s.rot_min_deg, s.rot_max_deg, s.rot_speed_deg_s,
                   s.rotate_min_z_mm, s.release_max_z_mm, s.vacuum_target_kpa, s.vacuum_hold_min_kpa, s.vacuum_settle_ms, s.vacuum_loss_ms, s.blow_ms, s.pump_max_run_s,
                   s.pressure_zero, s.pressure_scale, s.pressure_max_kpa, s.pressure_stuck_ms, s.pressure_samples, s.calibration_enabled ? 1 : 0, s.light_up_pct, s.light_down_pct,
-                  s.link_lost_ms, s.safe_z_retract ? 1 : 0, safe_vacuum_text(s.safe_vacuum));
+                  s.link_lost_ms, s.safe_z_retract ? 1 : 0, safe_vacuum_text(s.safe_vacuum), sensor_text(s.sensor[0]), sensor_text(s.sensor[1]), sensor_text(s.sensor[2]),
+                  sensor_text(s.sensor[3]), sensor_text(s.sensor[4]), sensor_text(s.sensor[5]), s.digital_active_high ? 1 : 0, s.digital_debounce_ms, s.interlock_z_tolerance_mm);
     return b;
 }
 

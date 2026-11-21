@@ -11,7 +11,8 @@
 //   POST /api/light?up=P&down=Q            the two lights, in percent (a word that is left out stays as it is)
 //   POST /api/stop                         stops every move; the vacuum is not touched
 //   POST /api/ack[?n=N]                    clears the fault of a nozzle whose cause is gone, or (without n) the safe state of the head
-//   POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   sets the zero or the scale of a sensor from its reading; only if the settings allow it
+//   POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   sets the zero or the scale of a sensor from its reading; only if the settings allow it and the sensor is analog
+//   POST /api/xy?moving=1|0                the machine asks to move in X and Y (granted only while every nozzle is raised to z_safe_mm) or says it stopped
 // The words are built here so that the server, the desktop programs and the tests read the same ones. A node without a token refuses every request that moves or changes
 // something. If the server is not heard for `link_lost_ms` the head goes to its safe state (see head.hpp).
 #pragma once
@@ -124,6 +125,11 @@ public:
             if (!d.empty() && !cfg::parse_int(d, 0, 100, down)) return {400, error_body("bad_request", "down")};
             return finish(head_.set_light(static_cast<int>(up), static_cast<int>(down)), 0);
         }
+        if (r.path == "/api/xy") {
+            const std::string m = query_value(r.query, "moving");
+            if (m != "0" && m != "1") return {400, error_body("bad_request", "moving")};
+            return finish(head_.xy_move(m == "1"), 0);
+        }
         if (r.path == "/api/ack" && query_value(r.query, "n").empty()) return finish(head_.ack(0, io_.now_ms()), 0);
         int n = 0;
         if (!nozzle_of(r, n)) return {400, error_body("bad_request", "n")};
@@ -185,16 +191,19 @@ public:
         bool faulty = false;
         for (int n = 1; n <= head_.count(); ++n) if (head_.nozzle(n).phase == Phase::Fault) faulty = true;
         if (faulty) codes.push_back("HDN-F01");
+        bool short_of_vacuum = false;
+        for (int n = 1; n <= head_.count(); ++n) if (head_.nozzle(n).alarm == Alarm::VacuumNotReached) short_of_vacuum = true;
+        if (short_of_vacuum) codes.push_back("HDN-V01");
         if (head_.settings().calibration_enabled) codes.push_back("HDN-C01");
         return codes;
     }
 
     /// Every code the node's check can raise, for the page of the contract and its test.
-    static std::vector<const char*> all_codes() { return {"HDN-S01", "HDN-S02", "HDN-F01", "HDN-C01"}; }
+    static std::vector<const char*> all_codes() { return {"HDN-S01", "HDN-S02", "HDN-F01", "HDN-V01", "HDN-C01"}; }
 
     static const char* severity(const std::string& code) {
         if (code == "HDN-S02") return "fail";
-        if (code == "HDN-C01") return "info";
+        if (code == "HDN-C01" || code == "HDN-V01") return "info";
         return "warn";
     }
 
@@ -215,6 +224,8 @@ public:
         w.field("safe", head_.safe()).field("safe_reason", head_.safe_reason()).field("safe_code", head_.safe() ? "HEAD-L01" : "none");
         w.field("pump", head_.pump()).field("pump_run_s", static_cast<long long>(head_.pump_run_ms() / 1000u));
         w.field("light_up", head_.light_up()).field("light_down", head_.light_down());
+        w.field("xy_clear", head_.xy_clear()).field("xy_moving", head_.xy_moving()).field("xy_blocking", head_.xy_blocking());
+        w.key("z_safe_mm").number(head_.settings().z_safe_mm, 2);
         w.field("calibrated", head_.calibrated()).field("calibration_allowed", head_.settings().calibration_enabled);
         w.field("uptime_s", static_cast<long long>((io_.now_ms() - started_) / 1000u));
         w.field("selfcheck", verdict).field("selfcheck_codes", joined);
@@ -228,9 +239,12 @@ public:
     std::string nozzle_json(int n) const {
         const Nozzle& z = head_.nozzle(n);
         eh3d::json::Writer w;
+        const bool digital = head_.settings().sensor[n - 1] == SensorKind::Digital;
         w.begin_object().field("n", n).field("phase", phase_text(z.phase)).field("fault", fault_code(z.fault));
-        w.field("valve", z.valve).field("blow", z.blow).field("part", z.phase == Phase::Holding);
-        w.key("kpa").number(z.kpa, 1);
+        w.field("sensor", sensor_text(head_.settings().sensor[n - 1])).field("alarm", alarm_text(z.alarm)).field("alarm_code", alarm_code(z.alarm));
+        w.field("valve", z.valve).field("blow", z.blow).field("part", z.phase == Phase::Holding).field("vacuum_ok", z.vac_ok).field("raised", head_.raised(n));
+        w.key("kpa");
+        if (digital) w.null(); else w.number(z.kpa, 1);
         w.key("z_mm").number(z.z, 2).key("z_target_mm").number(z.z_target, 2);
         w.key("a_deg").number(z.a, 1).key("a_target_deg").number(z.a_target, 1);
         w.field("last_result", z.last_result);
@@ -243,7 +257,7 @@ public:
 private:
     static bool known(const Request& r) {
         static const char* paths[] = {"/api/nozzle", "/api/nozzle/pick", "/api/nozzle/place", "/api/nozzle/blow", "/api/z", "/api/rotate", "/api/light", "/api/stop", "/api/ack",
-                                      "/api/vacuum/calibrate"};
+                                      "/api/vacuum/calibrate", "/api/xy"};
         for (const char* p : paths) if (r.path == p) return true;
         return false;
     }

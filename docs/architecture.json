@@ -1,8 +1,8 @@
 {
   "repo": "EH3D-NODE-PNP-HEAD",
   "ecosystem": "eh3d",
-  "tagline": "The node of the head of a pick-and-place machine: vacuum, puff of air, axes, lights, interlocks, a safe state.",
-  "description": "EH3D-NODE-PNP-HEAD is the logic of the node that stands between the server and the head of a pick-and-place machine. The server asks over HTTP with a token; the node runs the pump, the valves, the axes and the lights under interlocks, tells a part held from a part lost, and goes to a safe state by itself when the server is lost. All of it is tried against a simulator; the firmware and the hardware are not written.",
+  "tagline": "The node of the head of a pick-and-place machine: vacuum, puff of air, axes, lights, interlocks, two kinds of sensor.",
+  "description": "EH3D-NODE-PNP-HEAD is the logic of the node that stands between the server and the head of a pick-and-place machine. The server asks over HTTP with a token; the node runs the pump, the valves, the axes and the lights under interlocks, senses the vacuum of each nozzle with a pressure sensor or a vacuum switch, tells a part held from a part lost, says when the machine may move in X and Y, and goes to a safe state by itself when the server is lost. All of it is tried against a simulator; the firmware and the hardware are not written.",
   "columns": [
     "WHO USES IT",
     "THIS REPOSITORY",
@@ -43,6 +43,16 @@
       ]
     },
     {
+      "id": "sense",
+      "column": 1,
+      "level": "tested",
+      "title": "Vacuum sensing",
+      "lines": [
+        "analog or digital per nozzle;",
+        "filter, alarms, calibration"
+      ]
+    },
+    {
       "id": "net",
       "column": 1,
       "level": "tested",
@@ -63,7 +73,7 @@
       "title": "Nozzles and interlocks",
       "lines": [
         "pick, hold, lost part, release,",
-        "heights, pump limit, safe state"
+        "heights, pump limit, X/Y lock"
       ],
       "code": [
         "core/head.hpp"
@@ -99,7 +109,7 @@
       "level": "untested",
       "title": "Pump, valves, axes",
       "lines": [
-        "drivers and the readings:",
+        "drivers, sensors, switches:",
         "not written, never run"
       ]
     }
@@ -133,6 +143,16 @@
     },
     {
       "from": "head",
+      "to": "hardware",
+      "level": "untested"
+    },
+    {
+      "from": "head",
+      "to": "sense",
+      "level": "tested"
+    },
+    {
+      "from": "sense",
       "to": "hardware",
       "level": "untested"
     }

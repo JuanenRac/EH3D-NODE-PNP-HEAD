@@ -178,7 +178,7 @@ TEST(a_sensor_that_does_not_change_while_a_valve_is_open_is_a_dead_sensor) {
     CHECK(r.post("/api/nozzle/pick?n=1").status == 200);
     r.plant.frozen[0] = true;
     for (int i = 0; i < 4; ++i) { r.keep_alive(); r.run_for(1000); }
-    CHECK(r.z().phase == Phase::Fault && r.z().fault == Fault::SensorFault);
+    CHECK(r.z().phase == Phase::Fault && r.z().fault == Fault::SensorFrozen && r.z().alarm == Alarm::SensorFrozen);
     CHECK(!r.z().valve);
 }
 

@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-57-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verifica di onestà - cosa funziona oggi:** uno scheletro con logica reale e provata e senza hardware. Le regole del nodo girano su un computer contro un simulatore (57 test superati), ma nulla qui è stato compilato come firmware, scritto su una scheda o collegato a una pompa, una valvola, un sensore di pressione o un asse.
+**Verifica di onestà - cosa funziona oggi:** uno scheletro con logica reale e provata e senza hardware. Le regole del nodo girano su un computer contro un simulatore (85 test superati), ma nulla qui è stato compilato come firmware, scritto su una scheda o collegato a una pompa, una valvola, un sensore di pressione o un asse.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versione | `0.0.1` |
 | Maturità | Impalcatura |
-| Test | 57 |
+| Test | 85 |
 | Stack tecnologico | C++17 (host tests), Python 3.10+ |
 | Su hardware reale | Non ancora eseguito su hardware |
 
@@ -45,7 +45,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 
 | Area | Stato | Cosa significa qui |
 |---|---|---|
-| Logica e simulatore | 🟡 | Le regole del nodo girano contro un simulatore con seme fisso; 57 test superati su un computer. |
+| Logica e simulatore | 🟡 | Le regole del nodo girano contro un simulatore con seme fisso; 85 test superati su un computer. |
 | Contratto di rete | 🟡 | Le parole del nodo sono scritte in docs/CONTRACT.md e un test fallisce quando pagina e risposte differiscono; il plugin del server non usa ancora questo nodo. |
 | Firmware | 🟠 | Il firmware della scheda non è ancora scritto: sono importati solo gli aiuti semplici della base condivisa. |
 | Hardware reale | 🔴 | Nulla è girato su una pompa, una valvola, un sensore di pressione o un asse. |
@@ -53,6 +53,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 ## 🎯 Panoramica
 
 * **Un nodo, una testa:** preleva e rilascia i pezzi con il vuoto di ogni ugello, distingue un pezzo perso da uno mai presente, muove l'asse Z e la rotazione sotto interblocchi e passa da solo a uno stato sicuro se perde il server.
+* **Due modi di rilevare il vuoto e un blocco degli assi:** ogni ugello ha un sensore di pressione (filtrato, calibrato, con banda) o un vuotostato (con antirimbalzo), a scelta in `head.cfg`, con allarmi per pezzo perso, vuoto non raggiunto e sensore fuori range o bloccato; la testa dice anche quando tutti gli ugelli sono sollevati all'altezza sicura, così la macchina può muoversi in X e Y, e rifiuta di abbassare un ugello nel frattempo.
 
 ## 🧩 Ruolo in EH3D
 
@@ -90,6 +91,7 @@ POST /api/light?up=P&down=Q              the two lights, in percent
 POST /api/stop                           stop every move (the vacuum is not touched)
 POST /api/ack[?n=N]                      clear a fault that is gone (or the safe state, without n)
 POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   if the settings allow it
+POST /api/xy?moving=1|0                    the machine asks to move in X and Y (only with every nozzle raised) or says it stopped
 ```
 
 ## ⚙️ Configurazione
@@ -110,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Test
 
-57 test: test C++ su computer con seme fisso (eseguono il simulatore e le parole della rete e confrontano la pagina del contratto con le risposte) e test Python del repository. La CI esegue i test C++ anche con AddressSanitizer e UBSan.
+85 test: test C++ su computer con seme fisso (eseguono il simulatore e le parole della rete e confrontano la pagina del contratto con le risposte) e test Python del repository. La CI esegue i test C++ anche con AddressSanitizer e UBSan.
 
 ## 🏗️ Compilazione e rilascio
 
@@ -129,14 +131,15 @@ La versione vive in `eh3d.project.json` e ogni versione ha la sua voce in [CHANG
 EH3D-NODE-PNP-HEAD/
 ├── core/
 │   ├── head_config.hpp cfg_text.hpp                                                                                                         il file delle impostazioni e i suoi valori sicuri
-│   ├── head.hpp                                                                                                                             cosa fa la testa con ugelli, pompa e assi
+│   ├── head.hpp                                                                                                                             ugelli, pompa e assi; vuoto analogico o digitale; il blocco X/Y
 │   ├── head_node.hpp version.hpp                                                                                                            le parole del nodo sulla rete
-│   ├── head_sim.hpp                                                                                                                         una testa su un computer: pompa, valvole, pezzi e sensori
+│   ├── head_sim.hpp                                                                                                                         una testa sul computer: pompa, valvole, pezzi, sensori e pressostati
 │   └── json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp   aiuti semplici condivisi dai nodi, tenuti uguali da uno strumento
 ├── tests/
 │   ├── check.hpp CMakeLists.txt                                                                                                             la struttura delle prove e come si compilano
 │   ├── test_config.cpp                                                                                                                      il file delle impostazioni, il filtro e la calibrazione
 │   ├── test_head.cpp                                                                                                                        la testa con pompa e sensori simulati: prelievi, perdite, interblocchi, stato sicuro
+│   ├── test_sensor.cpp                                                                                                                      vuoto analogico e digitale, allarmi e blocco X/Y
 │   └── test_node.cpp                                                                                                                        le parole della rete, il token, lo stato sicuro e la pagina del contratto
 ├── docs/
 │   ├── CONTRACT.md                                                                                                                          cosa dice il nodo sulla rete (e sulla catena)

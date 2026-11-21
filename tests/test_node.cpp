@@ -184,18 +184,24 @@ TEST(every_code_is_in_the_page_and_every_code_of_the_page_exists) {
     for (const char* c : Node::all_codes()) node_codes.insert(c);
     for (const char* c : all_fault_codes()) fault_codes.insert(c);
     CHECK(node_codes == codes_in(page, "HDN-", 7));
-    CHECK(fault_codes == codes_in(page, "HEAD-", 8));
-    for (Fault f : {Fault::VacuumLost, Fault::PumpOverrun, Fault::SensorFault}) CHECK(fault_codes.count(fault_code(f)) == 1);
+    std::set<std::string> alarm_codes;
+    for (const char* c : all_alarm_codes()) alarm_codes.insert(c);
+    std::set<std::string> every = fault_codes;
+    every.insert(alarm_codes.begin(), alarm_codes.end());
+    CHECK(every == codes_in(page, "HEAD-", 8));   // the faults and the alarms are the codes of the page
+    for (Alarm a : {Alarm::VacuumNotReached, Alarm::PartLost, Alarm::SensorRange, Alarm::SensorFrozen}) CHECK(alarm_codes.count(alarm_code(a)) == 1);
+    for (Fault f : {Fault::VacuumLost, Fault::PumpOverrun, Fault::SensorFault, Fault::SensorFrozen}) CHECK(fault_codes.count(fault_code(f)) == 1);
     for (const char* c : Node::all_codes()) CHECK(std::string(Node::severity(c)).size() > 0);
 }
 
 TEST(every_route_and_every_refusal_is_in_the_page) {
     std::string page = read_file("docs/CONTRACT.md");
     for (const char* route : {"/api/status", "/api/nozzle?n=N", "/api/nozzle/pick", "/api/nozzle/place", "/api/nozzle/blow", "/api/z", "/api/rotate", "/api/light", "/api/stop", "/api/ack",
-                              "/api/vacuum/calibrate"})
+                              "/api/vacuum/calibrate", "/api/xy"})
         CHECK(page.find(route) != std::string::npos);
     for (const char* why : {"bad_nozzle", "out_of_range", "safe_state", "fault", "busy", "not_holding", "holding", "interlock_release_high", "interlock_rotate_low", "disabled", "still_active",
-                            "no_reading", "bad_reading", "vacuum_not_reached", "held", "placed"})
+                            "no_reading", "bad_reading", "vacuum_not_reached", "held", "placed", "not_analog", "interlock_xy_nozzle_low", "interlock_xy_moving",
+                            "part_lost", "sensor_out_of_range", "sensor_frozen"})
         CHECK(page.find(std::string("`") + why + "`") != std::string::npos);
 }
 

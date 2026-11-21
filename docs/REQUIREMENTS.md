@@ -2,7 +2,7 @@
 
 This register is the single source of the state of each capability: `STATUS.md`, the README files and the capability matrix of the documentation hub cite it and never state a state that it does not. A state is one of `planned`, `prototype`, `implemented` and `validated`. `validated` means that a person has run the capability on real hardware and the evidence of the manifest says `bench` or `field`; nothing here is validated, because nothing of this node has run on a board.
 
-The register has 50 requirements: 41 implemented, 0 prototype, 9 planned and 0 validated. By progress: 41 done, 0 partial, 5 pending and 4 blocked. High coverage is not proof of correctness, so each row says how it is checked: the test that names it, and what it shows.
+The register has 78 requirements: 69 implemented, 0 prototype, 9 planned and 0 validated. By progress: 69 done, 0 partial, 4 pending and 5 blocked. High coverage is not proof of correctness, so each row says how it is checked: the test that names it, and what it shows.
 
 ## How to read the register
 
@@ -87,10 +87,48 @@ The check is `tools/test_node.py`: it reads this table, finds each test and fail
 |---|---|---|---|---|---|---|
 | PNPH-042 | The firmware for the ESP32-S3 (network, panel, update, storage) on the shared base. | planned | pending | none | `planned:test_node::the_firmware_answers_the_words_of_the_contract` | Only ten plain helpers of the shared base are imported; the network, panel and update parts of the base are not. |
 | PNPH-043 | The outputs of the pump, the valves and the puff of air, with a driver for each and a read-back that tells that a valve really opened. | planned | blocked | none | `planned:test_head::an_output_that_does_not_follow_is_a_fault` | Waits for a pump, valves and drivers on a bench. |
-| PNPH-044 | The reading of the pressure sensors through their converter, with the noise of a real line. | planned | blocked | none | `planned:test_config::the_converter_gives_the_raw_reading_of_each_sensor` | Waits for the sensors on a bench; the limits of the settings are unproven. |
+| PNPH-044 | The reading of the pressure sensors through their converter, and of the vacuum switches through their inputs, with the noise of a real line. | planned | blocked | none | `planned:test_config::the_converter_gives_the_raw_reading_of_each_sensor` | Waits for the sensors and the switches on a bench; the limits of the settings are unproven. |
 | PNPH-045 | The drivers of the Z and rotation axes (steppers with a UART driver, with the current, the micro-steps and a sensorless stall homing). | planned | blocked | none | `planned:test_head::the_axes_home_and_repeat_to_the_same_position` | Waits for the motors; today the axes are a model. |
 | PNPH-046 | Generic actuators set by pin (on or off, PWM, inverted, a longest time) for whatever else a head has. | planned | pending | none | `planned:test_head::a_generic_actuator_follows_its_pin_and_its_longest_time` | - |
 | PNPH-047 | A self-check at the start of the pump, the valves, the sensors, the lights and the end stops, with codes. | planned | pending | none | `planned:test_node::the_self_check_at_the_start_finds_a_valve_that_does_not_open` | The check of the node on itself exists; the one that touches the hardware does not. |
 | PNPH-048 | The presence sensors of the nozzles in the rack and the state of the changer. | planned | blocked | none | `planned:test_head::the_rack_tells_which_nozzle_is_on_the_head` | Waits for the rack and its sensors. |
-| PNPH-049 | The signal that tells the controller of the machine that the nozzles are lifted, for the interlocks of the moves in X and Y. | planned | pending | none | `planned:test_node::the_status_says_when_every_nozzle_is_lifted` | Which height counts as lifted is not decided. |
+| PNPH-049 | The signal that tells the controller of the machine that the nozzles are lifted as a line on a pin, for a controller that does not speak HTTP. | planned | blocked | none | `planned:test_node::the_xy_clear_line_follows_the_nozzles` | Waits for the board; the signal exists today as `xy_clear` in the status and the permission of `POST /api/xy`. |
 | PNPH-050 | A profile for a paste dispenser (a pump, a pulse width, a retraction, a priming and a pressure). | planned | pending | none | `planned:test_head::a_paste_pulse_has_its_width_and_its_retraction` | The decision about paste is open. |
+
+## The sensors of the nozzles
+
+| ID | Requirement | State | Progress | Evidence | Test | Limits |
+|---|---|---|---|---|---|---|
+| PNPH-051 | Each nozzle has its own sensor kind in the settings (analog or digital), analog is the default, and the kinds are read back the same. | implemented | done | host-test | `test_sensor::each_nozzle_has_its_own_sensor_kind_in_the_settings` | - |
+| PNPH-052 | A sensor kind nobody knows, or a nozzle that does not exist, is refused with its key and the default stays. | implemented | done | host-test | `test_sensor::a_sensor_kind_nobody_knows_or_a_nozzle_that_does_not_exist_is_refused` | - |
+| PNPH-053 | A debounce as long as the pick is allowed to take goes back to the default. | implemented | done | host-test | `test_sensor::a_debounce_as_long_as_the_pick_is_put_back_to_the_default` | - |
+| PNPH-054 | The example file names the sensor of every nozzle and the keys of the switches. | implemented | done | host-test | `test_sensor::the_example_file_names_the_sensor_of_every_nozzle_and_the_keys_of_the_switches` | - |
+| PNPH-055 | A digital sensor holds a part the same way as an analog one and says no pressure. | implemented | done | simulator | `test_sensor::a_digital_sensor_holds_a_part_the_same_way_and_says_no_pressure` | The switch is simulated with made-up pressures; no real switch has been tried. |
+| PNPH-056 | A digital pick over nothing fails, closes the valve and leaves the alarm of the pick. | implemented | done | simulator | `test_sensor::a_digital_pick_over_nothing_fails_and_leaves_the_alarm_of_the_pick` | The switch is simulated. |
+| PNPH-057 | A digital part that falls is lost after the loss time and the nozzle holds the fault. | implemented | done | simulator | `test_sensor::a_digital_part_that_falls_is_lost_after_the_loss_time_and_the_nozzle_holds_the_fault` | The switch is simulated. |
+| PNPH-058 | A bouncing switch is filtered by the debounce. | implemented | done | simulator | `test_sensor::a_bouncing_switch_is_filtered_by_the_debounce` | The bounce is made up; the real one is measured on a bench. |
+| PNPH-059 | An active-low switch is read with the other polarity. | implemented | done | simulator | `test_sensor::an_active_low_switch_is_read_with_the_other_polarity` | The switch is simulated. |
+| PNPH-060 | A level between high and low is a sensor out of range until it is gone. | implemented | done | simulator | `test_sensor::a_level_between_high_and_low_is_a_sensor_out_of_range_until_it_is_gone` | What a real unplugged line gives is a bench test. |
+| PNPH-061 | A switch that says vacuum with nothing pulling is a stuck switch. | implemented | done | simulator | `test_sensor::a_switch_that_says_vacuum_with_nothing_pulling_is_a_stuck_switch` | The switch is simulated. |
+| PNPH-062 | A switch whose level does not change while a part is held is not a fault. | implemented | done | simulator | `test_sensor::a_switch_that_does_not_change_is_not_a_fault_while_a_part_is_held` | - |
+| PNPH-063 | An analog nozzle keeps its band between the target and the hold limit. | implemented | done | host-test | `test_sensor::an_analog_nozzle_keeps_its_band_between_the_target_and_the_hold_limit` | - |
+| PNPH-064 | The filter of an analog nozzle averages the readings and a switch has none. | implemented | done | host-test | `test_sensor::the_filter_of_an_analog_nozzle_averages_the_readings_and_a_switch_has_none` | - |
+| PNPH-065 | The calibration is for the analog sensors only; a switch is refused with not_analog. | implemented | done | simulator | `test_sensor::the_calibration_is_for_the_analog_sensors_only` | - |
+| PNPH-066 | A frozen pressure sensor and one out of range have their own alarms and codes. | implemented | done | simulator | `test_sensor::a_frozen_pressure_sensor_and_one_out_of_range_have_their_own_alarms` | - |
+| PNPH-067 | An analog pick over nothing leaves the same alarm, and the acknowledgement clears it. | implemented | done | simulator | `test_sensor::an_analog_pick_over_nothing_leaves_the_same_alarm_and_ack_clears_it` | - |
+| PNPH-068 | Digital and analog nozzles work together on one head. | implemented | done | simulator | `test_sensor::digital_and_analog_nozzles_work_together_on_one_head` | The sensors are simulated. |
+| PNPH-069 | The same seed gives the same run with a switch and another seed another run. | implemented | done | simulator | `test_sensor::the_same_seed_gives_the_same_run_with_a_switch_and_another_seed_another` | - |
+| PNPH-070 | The page of the contract names the sensors, the alarms and the words of the interlock, and the page of the hardware lists the bench test of each. | implemented | done | host-test | `test_sensor::the_page_of_the_contract_names_the_sensors_the_alarms_and_the_xy_words` | - |
+
+## The interlock of the machine in X and Y
+
+| ID | Requirement | State | Progress | Evidence | Test | Limits |
+|---|---|---|---|---|---|---|
+| PNPH-071 | The machine may move in X and Y only when every nozzle is raised to the safe height; the status says which nozzles block it. | implemented | done | simulator | `test_sensor::the_machine_may_move_in_xy_only_when_every_nozzle_is_raised_to_the_safe_height` | The node says whether the axes may move; it does not stop the axes of the machine. |
+| PNPH-072 | The safe height has a tolerance, and a nozzle is raised by where it is going as well as where it is. | implemented | done | simulator | `test_sensor::the_safe_height_has_a_tolerance_and_a_nozzle_is_raised_by_where_it_goes_too` | The height at which a nozzle is really clear of the board is a bench test. |
+| PNPH-073 | While the machine moves in X and Y no nozzle is lowered under the safe height. | implemented | done | simulator | `test_sensor::while_the_machine_moves_in_xy_no_nozzle_is_lowered_under_the_safe_height` | - |
+| PNPH-074 | The height for turning a nozzle plays no part in the interlock of X and Y, whatever its value. | implemented | done | simulator | `test_sensor::rotate_min_z_does_not_decide_the_xy_interlock` | - |
+| PNPH-075 | A raised nozzle that holds a fault does not block the axes, a low one does, and going up is always allowed. | implemented | done | simulator | `test_sensor::a_raised_nozzle_that_holds_a_fault_does_not_block_xy_but_a_low_one_does` | - |
+| PNPH-076 | The permission to move is released by a person after the safe state. | implemented | done | simulator | `test_sensor::the_permission_to_move_in_xy_is_released_by_a_person_after_the_safe_state` | - |
+| PNPH-077 | Without the retract of the safe state, a low nozzle keeps blocking the axes. | implemented | done | simulator | `test_sensor::the_safe_state_without_retract_leaves_a_low_nozzle_blocking_xy` | - |
+| PNPH-078 | A bad request for the permission is a 400, and a node without a token refuses it. | implemented | done | host-test | `test_sensor::a_bad_xy_request_is_a_400_and_a_node_without_a_token_refuses_it` | - |

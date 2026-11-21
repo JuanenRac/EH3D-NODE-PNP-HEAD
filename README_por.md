@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-57-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-85-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** uma estrutura inicial com lógica real e testada e sem hardware. As regras do nó correm num computador contra um simulador (57 testes passam), mas nada aqui foi compilado como firmware, gravado ou ligado a uma bomba, uma válvula, um sensor de pressão ou um eixo.
+**Verificação de honestidade - o que funciona hoje:** uma estrutura inicial com lógica real e testada e sem hardware. As regras do nó correm num computador contra um simulador (85 testes passam), mas nada aqui foi compilado como firmware, gravado ou ligado a uma bomba, uma válvula, um sensor de pressão ou um eixo.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versão | `0.0.1` |
 | Maturidade | Estrutura inicial |
-| Testes | 57 |
+| Testes | 85 |
 | Tecnologias | C++17 (host tests), Python 3.10+ |
 | Em hardware real | Ainda não executado em hardware |
 
@@ -45,7 +45,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 
 | Área | Estado | O que significa aqui |
 |---|---|---|
-| Lógica e simulador | 🟡 | As regras do nó correm contra um simulador com semente fixa; 57 testes passam num computador. |
+| Lógica e simulador | 🟡 | As regras do nó correm contra um simulador com semente fixa; 85 testes passam num computador. |
 | Contrato de rede | 🟡 | As palavras do nó estão escritas em docs/CONTRACT.md e um teste falha quando a página e as respostas diferem; o plugin do servidor ainda não usa este nó. |
 | Firmware | 🟠 | O firmware da placa ainda não está escrito: só foram importados os auxiliares simples da base partilhada. |
 | Hardware real | 🔴 | Nada correu em uma bomba, uma válvula, um sensor de pressão ou um eixo. |
@@ -53,6 +53,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 ## 🎯 Visão geral
 
 * **Um nó, uma cabeça:** recolhe e larga peças com o vácuo de cada bico, distingue uma peça perdida de uma que nunca lá esteve, move o eixo Z e a rotação sob bloqueios e passa sozinho a um estado seguro se perder o servidor.
+* **Duas formas de medir o vácuo e um bloqueio dos eixos:** cada bico tem um sensor de pressão (filtrado, calibrado, com banda) ou um pressóstato (com antirressalto), à escolha em `head.cfg`, com alarmes de peça perdida, vácuo não atingido e sensor fora de gama ou congelado; a cabeça diz também quando todos os bicos estão levantados à altura segura, para a máquina se poder mover em X e Y, e recusa baixar um bico enquanto isso.
 
 ## 🧩 Papel no EH3D
 
@@ -90,6 +91,7 @@ POST /api/light?up=P&down=Q              the two lights, in percent
 POST /api/stop                           stop every move (the vacuum is not touched)
 POST /api/ack[?n=N]                      clear a fault that is gone (or the safe state, without n)
 POST /api/vacuum/calibrate?n=N&kind=zero|scale[&kpa=K]   if the settings allow it
+POST /api/xy?moving=1|0                    the machine asks to move in X and Y (only with every nozzle raised) or says it stopped
 ```
 
 ## ⚙️ Configuração
@@ -110,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Testes
 
-57 testes: testes de C++ no computador com semente fixa (executam o simulador e as palavras da rede e comparam a página do contrato com as respostas) e testes de Python do repositório. A CI também executa os de C++ com AddressSanitizer e UBSan.
+85 testes: testes de C++ no computador com semente fixa (executam o simulador e as palavras da rede e comparam a página do contrato com as respostas) e testes de Python do repositório. A CI também executa os de C++ com AddressSanitizer e UBSan.
 
 ## 🏗️ Compilação e publicação
 
@@ -129,14 +131,15 @@ A versão vive em `eh3d.project.json` e cada versão tem a sua entrada em [CHANG
 EH3D-NODE-PNP-HEAD/
 ├── core/
 │   ├── head_config.hpp cfg_text.hpp                                                                                                         o ficheiro de definições e os seus valores seguros
-│   ├── head.hpp                                                                                                                             o que a cabeça faz com os seus bicos, bomba e eixos
+│   ├── head.hpp                                                                                                                             bicos, bomba e eixos; vácuo analógico ou digital; o bloqueio X/Y
 │   ├── head_node.hpp version.hpp                                                                                                            as palavras do nó na rede
-│   ├── head_sim.hpp                                                                                                                         uma cabeça num computador: bomba, válvulas, peças e sensores
+│   ├── head_sim.hpp                                                                                                                         uma cabeça no computador: bomba, válvulas, peças, sensores e pressóstatos
 │   └── json.hpp auth.hpp semver.hpp backoff.hpp task_health.hpp stored_load.hpp memory_budget.hpp net_text.hpp node_id.hpp civil_time.hpp   auxiliares simples partilhados pelos nós, mantidos iguais por uma ferramenta
 ├── tests/
 │   ├── check.hpp CMakeLists.txt                                                                                                             a estrutura dos testes e como se compilam
 │   ├── test_config.cpp                                                                                                                      o ficheiro de definições, o filtro e a calibração
 │   ├── test_head.cpp                                                                                                                        a cabeça com bomba e sensores simulados: recolhas, perdas, bloqueios, estado seguro
+│   ├── test_sensor.cpp                                                                                                                      vácuo analógico e digital, alarmes e o bloqueio X/Y
 │   └── test_node.cpp                                                                                                                        as palavras da rede, o token, o estado seguro e a página do contrato
 ├── docs/
 │   ├── CONTRACT.md                                                                                                                          o que o nó diz na rede (e na cadeia)

@@ -39,7 +39,20 @@ pressure_scale = 0.1
 pressure_max_kpa = 101        # 20 to 200: a reading above this cannot be real
 pressure_stuck_ms = 3000      # 500 to 60000: a reading that does not change at all for this long while a valve is open is a dead sensor
 pressure_samples = 4          # 1 to 32 readings averaged
-calibration_enabled = 0       # the calibration changes what the limits mean: off until a person switches it on
+calibration_enabled = 0       # the calibration changes what the limits mean: off until a person switches it on (analog sensors only)
+
+# --- how the vacuum of each nozzle is sensed: analog (a pressure sensor read as a number, with the filter, the calibration and the band above) or digital (a vacuum switch read as a level) ---
+nozzle_1_sensor = analog      # analog or digital
+nozzle_2_sensor = analog
+nozzle_3_sensor = analog
+nozzle_4_sensor = analog
+nozzle_5_sensor = analog
+nozzle_6_sensor = analog
+digital_active_high = 1       # digital sensors: a high level means the vacuum is there (0: a low level does)
+digital_debounce_ms = 20      # 1 to 500, below vacuum_settle_ms: a digital level counts after it has stayed the same this long; a level that is neither high nor low for this long is a sensor out of range
+
+# --- the interlock of the X and Y axes of the machine: the nozzles are raised when they are at or above z_safe_mm (rotate_min_z_mm is not used for it) ---
+interlock_z_tolerance_mm = 0.5  # 0 to 5: how far under z_safe_mm a nozzle may be and still count as raised
 
 # --- the lights, in percent, at the start ---
 light_up_pct = 0
