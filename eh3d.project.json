@@ -12,13 +12,13 @@
     "Vacuum"
   ],
   "deployment_target": "mcu",
-  "maturity": "scaffolding",
+  "maturity": "functional",
   "evidence": "simulator",
   "hardware_bound": true,
   "family": "Pick and Place Nodes",
   "parent": null,
   "build": "cmake -S tests -B build/host && cmake --build build/host && ctest --test-dir build/host -C Debug",
-  "notes": "Scaffolding v0.0.2: the node of the head of a pick-and-place machine. It runs the vacuum pump and the valve of each nozzle with a pressure sensor or a vacuum switch, the puff of air that lets a part go, the Z axis and the rotation of each nozzle and two lights, under interlocks, tells the machine when every nozzle is raised so that it may move in X and Y, and goes to a safe state by itself when it loses the server. The rules are in the host-tested core and are tried against a simulator of the head; the ESP-IDF firmware is not written, and nothing has been connected to a pump, a valve, a sensor or a motor.",
+  "notes": "Functional v0.0.2: the node of the head of a pick-and-place machine. It runs the vacuum pump and the valve of each nozzle with a pressure sensor or a vacuum switch, the puff of air that lets a part go, the Z axis and the rotation of each nozzle and two lights, under interlocks, tells the machine when every nozzle is raised so that it may move in X and Y, and goes to a safe state by itself when it loses the server. The rules are in the host-tested core and are tried against a simulator of the head; the ESP-IDF firmware is not written, and nothing has been connected to a pump, a valve, a sensor or a motor.",
   "native_version": {
     "file": "VERSION",
     "pattern": "^(\\d+\\.\\d+\\.\\d+)"
