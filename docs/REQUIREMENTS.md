@@ -2,7 +2,7 @@
 
 This register is the single source of the state of each capability: `STATUS.md`, the README files and the capability matrix of the documentation hub cite it and never state a state that it does not. A state is one of `planned`, `prototype`, `implemented` and `validated`. `validated` means that a person has run the capability on real hardware and the evidence of the manifest says `bench` or `field`; nothing here is validated, because nothing of this node has run on a board.
 
-The register has 87 requirements: 78 implemented, 0 prototype, 9 planned and 0 validated. By progress: 78 done, 0 partial, 4 pending and 5 blocked. High coverage is not proof of correctness, so each row says how it is checked: the test that names it, and what it shows.
+The register has 89 requirements: 80 implemented, 0 prototype, 9 planned and 0 validated. By progress: 80 done, 0 partial, 4 pending and 5 blocked. High coverage is not proof of correctness, so each row says how it is checked: the test that names it, and what it shows.
 
 ## How to read the register
 
@@ -141,3 +141,5 @@ The check is `tools/test_node.py`: it reads this table, finds each test and fail
 | PNPH-085 | A request with a wrong token does not keep the link. | implemented | done | simulator | `test_node::a_read_with_a_wrong_token_during_a_move_does_not_keep_the_link` | - |
 | PNPH-086 | While an order waits, a stop is carried out and another order is busy. | implemented | done | simulator | `test_node::during_a_wait_a_stop_is_carried_out_and_another_order_is_busy` | - |
 | PNPH-087 | A puff cut short by the safe state is not answered as done. | implemented | done | simulator | `test_node::a_puff_cut_short_by_the_safe_state_is_not_answered_as_done` | - |
+| PNPH-088 | The status says the time of the watch over the server, with or without the token: the value of the settings the head runs with. | implemented | done | host-test | `test_node::the_status_says_the_link_time_of_the_settings_with_or_without_the_token` | - |
+| PNPH-089 | The time the status says is the time the head keeps, and reading the status without the token does not keep the link. | implemented | done | simulator | `test_node::the_link_time_of_the_status_is_the_time_the_head_keeps` | The time it takes on a board is a bench test. |

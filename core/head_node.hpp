@@ -228,6 +228,8 @@ public:
         w.begin_object();
         w.field("node", head_.settings().name).field("version", kVersion).field("nozzle_count", head_.count());
         w.field("safe", head_.safe()).field("safe_reason", head_.safe_reason()).field("safe_code", head_.safe() ? "HEAD-L01" : "none");
+        // the time of the watch over the server, from the settings the head runs with: whoever asks can tell how often it has to
+        w.field("link_lost_ms", head_.settings().link_lost_ms);
         w.field("pump", head_.pump()).field("pump_run_s", static_cast<long long>(head_.pump_run_ms() / 1000u));
         w.field("light_up", head_.light_up()).field("light_down", head_.light_down());
         w.field("xy_clear", head_.xy_clear()).field("xy_moving", head_.xy_moving()).field("xy_blocking", head_.xy_blocking());
