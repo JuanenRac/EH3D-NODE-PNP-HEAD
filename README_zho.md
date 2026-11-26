@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-96-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-98-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性核对 - 今天真正能运行的内容：** 这是一个可在模拟中运行的节点：逻辑真实且经过测试，没有固件，也没有硬件。节点的规则在计算机上对模拟器运行（96 个测试通过），但这里的内容从未编译成固件、烧录，也从未连接到泵、阀门、压力传感器或轴。
+**诚实性核对 - 今天真正能运行的内容：** 这是一个可在模拟中运行的节点：逻辑真实且经过测试，没有固件，也没有硬件。节点的规则在计算机上对模拟器运行（98 个测试通过），但这里的内容从未编译成固件、烧录，也从未连接到泵、阀门、压力传感器或轴。
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | 版本 | `0.0.2` |
 | 成熟度 | 可用 |
-| 测试 | 96 |
+| 测试 | 98 |
 | 技术栈 | C++17 (host tests), Python 3.10+ |
 | 真实硬件 | 尚未在硬件上运行 |
 
@@ -45,7 +45,7 @@
 
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
-| 逻辑与模拟器 | 🟡 | 节点的规则对固定种子的模拟器运行；96 个测试在计算机上通过。 |
+| 逻辑与模拟器 | 🟡 | 节点的规则对固定种子的模拟器运行；98 个测试在计算机上通过。 |
 | 网络契约 | 🟡 | 节点的用语写在 docs/CONTRACT.md 中，页面与应答不一致时测试会失败；服务器的插件尚未使用该节点。 |
 | 固件 | 🟠 | 电路板的固件尚未编写：只导入了共享基础中的简单辅助代码。 |
 | 真实硬件 | 🔴 | 泵、阀门、压力传感器或轴上尚未运行任何东西。 |
@@ -72,7 +72,7 @@
 该节点的安全规则；展示每条规则的测试已在 docs/REQUIREMENTS.md 中列出：
 
 * 没有令牌的节点会拒绝一切移动或更改任何东西的请求；令牌从不显示、回写或记入日志。
-* 听不到服务器时，节点自行进入安全状态，在有人确认之前不移动任何东西。命令等待期间（长时间移动或长时间吸取），节点继续接收请求：服务器必须持续询问，中途失去链路会使移动停止。
+* 听不到服务器时，节点自行进入安全状态，在有人确认之前不移动任何东西。命令等待期间（长时间移动或长时间吸取），节点继续接收请求：服务器必须持续询问，中途失去链路会使移动停止。这段时间有多长，节点无需询问即会告知：`GET /api/status` 中的 `link_lost_ms`，即其设置中的值。
 * 每个限值都是带保守默认值的设置，错误的值绝不会放宽限值：它会被拒绝，默认值保留。
 
 ## 🔌 接口
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 测试
 
-96 个测试：固定种子的 C++ 主机测试（运行模拟器和网络用语，并将契约页面与应答对比）以及仓库的 Python 测试。CI 还会用 AddressSanitizer 和 UBSan 运行 C++ 测试。
+98 个测试：固定种子的 C++ 主机测试（运行模拟器和网络用语，并将契约页面与应答对比）以及仓库的 Python 测试。CI 还会用 AddressSanitizer 和 UBSan 运行 C++ 测试。
 
 ## 🏗️ 构建与发布
 

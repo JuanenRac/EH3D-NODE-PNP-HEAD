@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-96-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-98-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** um nó que funciona em simulação: lógica real e testada, sem firmware e sem hardware. As regras do nó correm num computador contra um simulador (96 testes passam), mas nada aqui foi compilado como firmware, gravado ou ligado a uma bomba, uma válvula, um sensor de pressão ou um eixo.
+**Verificação de honestidade - o que funciona hoje:** um nó que funciona em simulação: lógica real e testada, sem firmware e sem hardware. As regras do nó correm num computador contra um simulador (98 testes passam), mas nada aqui foi compilado como firmware, gravado ou ligado a uma bomba, uma válvula, um sensor de pressão ou um eixo.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versão | `0.0.2` |
 | Maturidade | Funcional |
-| Testes | 96 |
+| Testes | 98 |
 | Tecnologias | C++17 (host tests), Python 3.10+ |
 | Em hardware real | Ainda não executado em hardware |
 
@@ -45,7 +45,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 
 | Área | Estado | O que significa aqui |
 |---|---|---|
-| Lógica e simulador | 🟡 | As regras do nó correm contra um simulador com semente fixa; 96 testes passam num computador. |
+| Lógica e simulador | 🟡 | As regras do nó correm contra um simulador com semente fixa; 98 testes passam num computador. |
 | Contrato de rede | 🟡 | As palavras do nó estão escritas em docs/CONTRACT.md e um teste falha quando a página e as respostas diferem; o plugin do servidor ainda não usa este nó. |
 | Firmware | 🟠 | O firmware da placa ainda não está escrito: só foram importados os auxiliares simples da base partilhada. |
 | Hardware real | 🔴 | Nada correu em uma bomba, uma válvula, um sensor de pressão ou um eixo. |
@@ -72,7 +72,7 @@ Como as partes deste repositório se encaixam: quem o usa, o que contém e de qu
 As regras de segurança deste nó; o teste que mostra cada uma está nomeado em docs/REQUIREMENTS.md:
 
 * Um nó sem token recusa todo o pedido que mova ou altere algo; o token nunca é mostrado, reescrito nem registado.
-* Se não ouvir o servidor, o nó passa sozinho a um estado seguro e não move nada até uma pessoa confirmar. Enquanto uma ordem espera (um movimento longo, uma recolha longa), o nó continua à escuta: o servidor tem de continuar a perguntar, e uma ligação perdida a meio pára o movimento.
+* Se não ouvir o servidor, o nó passa sozinho a um estado seguro e não move nada até uma pessoa confirmar. Enquanto uma ordem espera (um movimento longo, uma recolha longa), o nó continua à escuta: o servidor tem de continuar a perguntar, e uma ligação perdida a meio pára o movimento. O nó diz quanto é esse tempo sem que lho perguntem: `link_lost_ms` em `GET /api/status`, o valor das suas definições.
 * Cada limite é uma definição com um valor por omissão prudente, e um valor errado nunca afrouxa um: é recusado e fica o valor por omissão.
 
 ## 🔌 Interfaces
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Testes
 
-96 testes: testes de C++ no computador com semente fixa (executam o simulador e as palavras da rede e comparam a página do contrato com as respostas) e testes de Python do repositório. A CI também executa os de C++ com AddressSanitizer e UBSan.
+98 testes: testes de C++ no computador com semente fixa (executam o simulador e as palavras da rede e comparam a página do contrato com as respostas) e testes de Python do repositório. A CI também executa os de C++ com AddressSanitizer e UBSan.
 
 ## 🏗️ Compilação e publicação
 

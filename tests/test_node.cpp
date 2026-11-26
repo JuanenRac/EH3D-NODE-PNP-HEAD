@@ -211,6 +211,38 @@ TEST(the_version_of_the_firmware_is_the_one_of_the_manifest) {
     CHECK(m.string_or("version", "?") == std::string(kVersion));
 }
 
+TEST(the_status_says_the_link_time_of_the_settings_with_or_without_the_token) {
+    eh3d::json::Value v;
+    Rig d(with_token());
+    CHECK(parse(d.get("/api/status", false).body, v) && v.integer_or("link_lost_ms", 0, 0, 700000) == 2000);
+    Settings s;
+    CHECK(parse_settings("link_lost_ms = 7500\n", s).empty());
+    s.token = "tok";
+    Rig r(s);
+    CHECK(parse(r.get("/api/status", false).body, v) && v.integer_or("link_lost_ms", 0, 0, 700000) == 7500);
+    CHECK(parse(r.get("/api/status").body, v) && v.integer_or("link_lost_ms", 0, 0, 700000) == 7500);
+    // a value that is refused leaves the default, and the default is what is said; a head without a token says it too
+    Settings refused;
+    CHECK(!parse_settings("link_lost_ms = 100\n", refused).empty());
+    Rig n(refused);
+    CHECK(parse(n.get("/api/status", false).body, v) && v.integer_or("link_lost_ms", 0, 0, 700000) == 2000);
+}
+
+TEST(the_link_time_of_the_status_is_the_time_the_head_keeps) {
+    Settings s = with_token();
+    s.link_lost_ms = 6000;
+    Rig r(s);
+    eh3d::json::Value v;
+    CHECK(parse(r.get("/api/status", false).body, v));
+    const std::uint32_t said = static_cast<std::uint32_t>(v.integer_or("link_lost_ms", 0, 0, 700000));
+    CHECK(said == 6000u);
+    r.node.step(said - 500);
+    CHECK(!r.node.head().safe());
+    CHECK(r.get("/api/status", false).status == 200);  // without the token: it does not keep the link
+    r.node.step(1000);
+    CHECK(r.node.head().safe() && r.node.head().safe_reason() == std::string("server_lost"));
+}
+
 TEST(a_move_cut_by_the_safe_state_is_not_answered_as_done) {
     Settings s = with_token();
     s.z_speed_mm_s = 1.0;      // forty millimetres take forty seconds: far longer than link_lost_ms
