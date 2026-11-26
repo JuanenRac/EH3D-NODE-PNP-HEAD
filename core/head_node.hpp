@@ -95,6 +95,8 @@ public:
             double raw[kMaxNozzles] = {0, 0, 0, 0, 0, 0};
             io_.read_raw(raw, head_.count());
             head_.tick(io_.now_ms(), dt, raw);
+            // after the tick, never before: a silence that was already too long (a link that is gone, a task that did not run) is judged before anything new is heard
+            if (waiting_) io_.listen();
             ms -= dt;
         }
     }
@@ -117,6 +119,8 @@ public:
             return {200, nozzle_json(n)};
         }
         if (r.method != "POST") return {405, error_body("bad_method")};
+        // while a command waits, the others are heard (they count for the link) but only a stop and letting go of the X and Y axes are carried out
+        if (waiting_ && r.path != "/api/stop" && !(r.path == "/api/xy" && query_value(r.query, "moving") == "0")) return finish(Result{false, "busy"}, 0);
         if (r.path == "/api/stop") return finish(head_.stop(), 0);
         if (r.path == "/api/light") {
             long long up = -1, down = -1;
@@ -139,7 +143,7 @@ public:
             if (!res.ok) return finish(res, n);
             // wait for the vacuum to say if a part is held
             const std::uint32_t limit = static_cast<std::uint32_t>(head_.settings().vacuum_settle_ms) + 200;
-            for (std::uint32_t t = 0; t < limit && head_.nozzle(n).phase == Phase::Evacuating; t += 10) step(10);
+            for (std::uint32_t t = 0; t < limit && head_.nozzle(n).phase == Phase::Evacuating; t += 10) wait_for(10);
             const Nozzle& z = head_.nozzle(n);
             Result out;
             out.ok = z.phase == Phase::Holding;
@@ -149,7 +153,9 @@ public:
         if (r.path == "/api/nozzle/place" || r.path == "/api/nozzle/blow") {
             Result res = r.path == "/api/nozzle/place" ? head_.place(n, io_.now_ms()) : head_.blow(n, io_.now_ms());
             if (!res.ok) return finish(res, n);
-            step(static_cast<std::uint32_t>(head_.settings().blow_ms) + 20);
+            wait_for(static_cast<std::uint32_t>(head_.settings().blow_ms) + 20);
+            // the safe state closes the puff short (unless safe_vacuum is hold): that is not a puff that was done
+            if (head_.safe() && head_.settings().safe_vacuum == SafeVacuum::Off) return finish(Result{false, "safe_state"}, n);
             Result out;
             out.ok = head_.nozzle(n).phase == Phase::Idle;
             out.why = out.ok ? head_.nozzle(n).last_result : "not_finished";
@@ -161,7 +167,7 @@ public:
             Result res = head_.move_z(n, mm);
             if (!res.ok) return finish(res, n);
             const double travel = std::fabs(head_.nozzle(n).z_target - head_.nozzle(n).z);
-            step(static_cast<std::uint32_t>(travel / head_.settings().z_speed_mm_s * 1000.0) + 20);
+            wait_for(static_cast<std::uint32_t>(travel / head_.settings().z_speed_mm_s * 1000.0) + 20);
             return finish(arrived(head_.nozzle(n).z, mm, n), n);
         }
         if (r.path == "/api/rotate") {
@@ -170,7 +176,7 @@ public:
             Result res = head_.rotate(n, deg);
             if (!res.ok) return finish(res, n);
             const double travel = std::fabs(head_.nozzle(n).a_target - head_.nozzle(n).a);
-            step(static_cast<std::uint32_t>(travel / head_.settings().rot_speed_deg_s * 1000.0) + 20);
+            wait_for(static_cast<std::uint32_t>(travel / head_.settings().rot_speed_deg_s * 1000.0) + 20);
             return finish(arrived(head_.nozzle(n).a, deg, n), n);
         }
         if (r.path == "/api/vacuum/calibrate") {
@@ -255,6 +261,13 @@ public:
     }
 
 private:
+    /// Time passing inside a command: the same as step(), and the node goes on listening.
+    void wait_for(std::uint32_t ms) {
+        waiting_ = true;
+        step(ms);
+        waiting_ = false;
+    }
+
     static bool known(const Request& r) {
         static const char* paths[] = {"/api/nozzle", "/api/nozzle/pick", "/api/nozzle/place", "/api/nozzle/blow", "/api/z", "/api/rotate", "/api/light", "/api/stop", "/api/ack",
                                       "/api/vacuum/calibrate", "/api/xy"};
@@ -295,6 +308,7 @@ private:
     Head head_;
     Io& io_;
     std::uint32_t started_ = 0;
+    bool waiting_ = false;
 };
 
 }  // namespace pnp_head

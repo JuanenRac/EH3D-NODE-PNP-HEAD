@@ -59,6 +59,6 @@ light_up_pct = 0
 light_down_pct = 0
 
 # --- the watch over the server and the safe state ---
-link_lost_ms = 2000           # 500 to 600000
+link_lost_ms = 2000           # 500 to 600000; the server keeps asking more often than this, also while an order waits
 safe_z_retract = 1            # go up to z_safe_mm in the safe state
 safe_vacuum = off             # off: the pump stops and the valves close (a part may fall); hold: they stay as they were

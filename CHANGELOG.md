@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A long order no longer ends in the safe state while the server is there:** a move, a turn or a `vacuum_settle_ms` longer than `link_lost_ms` made the head safe although the link was good, because nothing was heard while the node waited. It now goes on listening, and a request with the token counts; the server has to keep asking while it waits. While an order waits, a stop and letting go of the X and Y axes are carried out and other orders are `busy`. The watch itself is unchanged: a link lost in the middle, or a task that did not run for that long, makes the head safe. Not tried on a board: there is no firmware yet.
+- **The safe state stops any move (fix):** with `safe_z_retract` off, a nozzle that was moving went on to its target in the safe state. It now stops where it is, and a puff cut short by the safe state is no longer answered as done. Nine new tests.
 - **A move that did not arrive is no longer answered as done (fix):** `POST /api/z` and `POST /api/rotate` answered `ok` even when the head went to its safe state or the nozzle got a fault in the middle of the move, so the machine could go on believing the nozzle was where it asked. They now answer `409` with `safe_state`, `fault` or `not_finished`. Two new tests.
 - The shared workflow checker (`tools/workflow_hygiene.py`) is the current one of the documentation hub: the filters under a trigger (branches, paths, types) are no longer read as events.
 

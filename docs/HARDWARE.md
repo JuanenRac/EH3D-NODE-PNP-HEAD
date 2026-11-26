@@ -38,6 +38,7 @@ The node is tried on a computer against a simulator. Each test below is what a p
 | H-13 | One head with a nozzle on a switch and a nozzle on a pressure sensor, the same part on both | Both hold; the number of the pressure sensor agrees with the point where the switch changes; HEAD-V02 on both when the part is taken away |
 | H-14 | Unplug a switch, then put a short on its line, then leave it floating | A level that is neither high nor low is HEAD-S01 for that nozzle only; a switch stuck on is HEAD-S02 after `pressure_stuck_ms`; write down what the electronics gives in each case |
 | H-15 | The interlock of X and Y: with one nozzle just under `z_safe_mm`, ask `POST /api/xy?moving=1`; then raise it and ask again; then try to lower a nozzle while the machine moves | The permission is refused with the nozzle down and given with it up; the lowering is refused while the machine holds it; measure the time between the request and the answer, and the height at which the nozzle is really clear of the tallest part on the board |
+| H-16 | With the server asking more often than `link_lost_ms`, order a move and a pick that last longer than it; then repeat and cut the network in the middle of each | With the link the orders finish; without it the head is safe within `link_lost_ms` of the cut, the axis stops and goes only up, and the pump and the valves do as `safe_vacuum` says |
 
 ## Licences
 

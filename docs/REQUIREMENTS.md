@@ -2,7 +2,7 @@
 
 This register is the single source of the state of each capability: `STATUS.md`, the README files and the capability matrix of the documentation hub cite it and never state a state that it does not. A state is one of `planned`, `prototype`, `implemented` and `validated`. `validated` means that a person has run the capability on real hardware and the evidence of the manifest says `bench` or `field`; nothing here is validated, because nothing of this node has run on a board.
 
-The register has 78 requirements: 69 implemented, 0 prototype, 9 planned and 0 validated. By progress: 69 done, 0 partial, 4 pending and 5 blocked. High coverage is not proof of correctness, so each row says how it is checked: the test that names it, and what it shows.
+The register has 87 requirements: 78 implemented, 0 prototype, 9 planned and 0 validated. By progress: 78 done, 0 partial, 4 pending and 5 blocked. High coverage is not proof of correctness, so each row says how it is checked: the test that names it, and what it shows.
 
 ## How to read the register
 
@@ -132,3 +132,12 @@ The check is `tools/test_node.py`: it reads this table, finds each test and fail
 | PNPH-076 | The permission to move is released by a person after the safe state. | implemented | done | simulator | `test_sensor::the_permission_to_move_in_xy_is_released_by_a_person_after_the_safe_state` | - |
 | PNPH-077 | Without the retract of the safe state, a low nozzle keeps blocking the axes. | implemented | done | simulator | `test_sensor::the_safe_state_without_retract_leaves_a_low_nozzle_blocking_xy` | - |
 | PNPH-078 | A bad request for the permission is a 400, and a node without a token refuses it. | implemented | done | host-test | `test_sensor::a_bad_xy_request_is_a_400_and_a_node_without_a_token_refuses_it` | - |
+| PNPH-079 | A move or a turn longer than the link watch finishes while the server is heard. | implemented | done | simulator | `test_node::a_move_longer_than_the_link_watch_arrives_while_the_server_is_heard` | - |
+| PNPH-080 | A vacuum wait longer than the link watch ends by the vacuum while the server is heard. | implemented | done | simulator | `test_node::a_vacuum_wait_longer_than_the_link_watch_ends_by_the_vacuum_while_the_server_is_heard` | - |
+| PNPH-081 | A link lost in the middle of a move or a turn stops it, and the nozzle goes up. | implemented | done | simulator | `test_node::a_link_lost_half_way_stops_the_move_and_the_nozzle_goes_up` | The time it takes on a board is a bench test. |
+| PNPH-082 | Without the retract, a link lost in the middle of a move stops the nozzle where it is. | implemented | done | simulator | `test_node::a_link_lost_half_way_without_the_retract_stops_the_nozzle_where_it_is` | - |
+| PNPH-083 | A link lost during the vacuum wait closes the valve and stops the pump. | implemented | done | simulator | `test_node::a_link_lost_during_the_vacuum_wait_closes_the_valve_and_stops_the_pump` | - |
+| PNPH-084 | A task that did not run for longer than the link watch ends in the safe state, even if the server asks right after. | implemented | done | simulator | `test_node::a_task_that_hangs_ends_in_the_safe_state_even_if_the_server_asks_right_after` | A task that never runs again needs the watchdog of the board, with the firmware. |
+| PNPH-085 | A request with a wrong token does not keep the link. | implemented | done | simulator | `test_node::a_read_with_a_wrong_token_during_a_move_does_not_keep_the_link` | - |
+| PNPH-086 | While an order waits, a stop is carried out and another order is busy. | implemented | done | simulator | `test_node::during_a_wait_a_stop_is_carried_out_and_another_order_is_busy` | - |
+| PNPH-087 | A puff cut short by the safe state is not answered as done. | implemented | done | simulator | `test_node::a_puff_cut_short_by_the_safe_state_is_not_answered_as_done` | - |

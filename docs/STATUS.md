@@ -6,7 +6,7 @@ EH3D-NODE-PNP-HEAD is the logic of a node, tested against a simulator. It has a 
 
 ## Capabilities
 
-The official state of each capability is in `REQUIREMENTS.md`. The register has 78 requirements: 69 implemented, 0 prototype, 9 planned and 0 validated. By progress: 69 done, 0 partial, 4 pending and 5 blocked. This page never states a state that `REQUIREMENTS.md` does not.
+The official state of each capability is in `REQUIREMENTS.md`. The register has 87 requirements: 78 implemented, 0 prototype, 9 planned and 0 validated. By progress: 78 done, 0 partial, 4 pending and 5 blocked. This page never states a state that `REQUIREMENTS.md` does not.
 
 ## What is simulated
 

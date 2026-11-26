@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-87-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-96-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verifica di onestà - cosa funziona oggi:** uno scheletro con logica reale e provata e senza hardware. Le regole del nodo girano su un computer contro un simulatore (87 test superati), ma nulla qui è stato compilato come firmware, scritto su una scheda o collegato a una pompa, una valvola, un sensore di pressione o un asse.
+**Verifica di onestà - cosa funziona oggi:** uno scheletro con logica reale e provata e senza hardware. Le regole del nodo girano su un computer contro un simulatore (96 test superati), ma nulla qui è stato compilato come firmware, scritto su una scheda o collegato a una pompa, una valvola, un sensore di pressione o un asse.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versione | `0.0.2` |
 | Maturità | Funzionale |
-| Test | 87 |
+| Test | 96 |
 | Stack tecnologico | C++17 (host tests), Python 3.10+ |
 | Su hardware reale | Non ancora eseguito su hardware |
 
@@ -45,7 +45,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 
 | Area | Stato | Cosa significa qui |
 |---|---|---|
-| Logica e simulatore | 🟡 | Le regole del nodo girano contro un simulatore con seme fisso; 87 test superati su un computer. |
+| Logica e simulatore | 🟡 | Le regole del nodo girano contro un simulatore con seme fisso; 96 test superati su un computer. |
 | Contratto di rete | 🟡 | Le parole del nodo sono scritte in docs/CONTRACT.md e un test fallisce quando pagina e risposte differiscono; il plugin del server non usa ancora questo nodo. |
 | Firmware | 🟠 | Il firmware della scheda non è ancora scritto: sono importati solo gli aiuti semplici della base condivisa. |
 | Hardware reale | 🔴 | Nulla è girato su una pompa, una valvola, un sensore di pressione o un asse. |
@@ -72,7 +72,7 @@ Come si incastrano le parti di questo repository: chi lo usa, che cosa contiene 
 Le regole di sicurezza di questo nodo; il test che mostra ciascuna è nominato in docs/REQUIREMENTS.md:
 
 * Un nodo senza token rifiuta ogni richiesta che muove o cambia qualcosa; il token non viene mai mostrato, riscritto né registrato.
-* Se non sente il server, il nodo passa da solo a uno stato sicuro e non muove nulla finché una persona non conferma.
+* Se non sente il server, il nodo passa da solo a uno stato sicuro e non muove nulla finché una persona non conferma. Mentre un ordine attende (un movimento lungo, un prelievo lungo) il nodo continua ad ascoltare: il server deve continuare a chiedere, e un collegamento perso a metà ferma il movimento.
 * Ogni limite è un'impostazione con un valore predefinito prudente, e un valore sbagliato non ne allenta mai uno: viene rifiutato e resta il valore predefinito.
 
 ## 🔌 Interfacce
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Test
 
-87 test: test C++ su computer con seme fisso (eseguono il simulatore e le parole della rete e confrontano la pagina del contratto con le risposte) e test Python del repository. La CI esegue i test C++ anche con AddressSanitizer e UBSan.
+96 test: test C++ su computer con seme fisso (eseguono il simulatore e le parole della rete e confrontano la pagina del contratto con le risposte) e test Python del repository. La CI esegue i test C++ anche con AddressSanitizer e UBSan.
 
 ## 🏗️ Compilazione e rilascio
 
