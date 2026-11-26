@@ -162,7 +162,7 @@ public:
             if (!res.ok) return finish(res, n);
             const double travel = std::fabs(head_.nozzle(n).z_target - head_.nozzle(n).z);
             step(static_cast<std::uint32_t>(travel / head_.settings().z_speed_mm_s * 1000.0) + 20);
-            return finish(Result(), n);
+            return finish(arrived(head_.nozzle(n).z, mm, n), n);
         }
         if (r.path == "/api/rotate") {
             double deg = 0;
@@ -171,7 +171,7 @@ public:
             if (!res.ok) return finish(res, n);
             const double travel = std::fabs(head_.nozzle(n).a_target - head_.nozzle(n).a);
             step(static_cast<std::uint32_t>(travel / head_.settings().rot_speed_deg_s * 1000.0) + 20);
-            return finish(Result(), n);
+            return finish(arrived(head_.nozzle(n).a, deg, n), n);
         }
         if (r.path == "/api/vacuum/calibrate") {
             const std::string kind = query_value(r.query, "kind");
@@ -267,6 +267,13 @@ private:
         if (!cfg::parse_int(query_value(r.query, "n"), 1, head_.count(), v)) return false;
         n = static_cast<int>(v);
         return true;
+    }
+
+    /// A move is done only when the axis is where it was asked to go: the safe state or a fault in the middle of it sends the axis elsewhere or stops it.
+    Result arrived(double now_at, double wanted, int n) const {
+        if (std::fabs(now_at - wanted) < 1e-6) return Result();
+        if (head_.safe()) return Result{false, "safe_state"};
+        return Result{false, head_.nozzle(n).phase == Phase::Fault ? "fault" : "not_finished"};
     }
 
     static int status_of(const Result& res) {

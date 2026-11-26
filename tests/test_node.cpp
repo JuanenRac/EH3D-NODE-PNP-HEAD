@@ -211,4 +211,28 @@ TEST(the_version_of_the_firmware_is_the_one_of_the_manifest) {
     CHECK(m.string_or("version", "?") == std::string(kVersion));
 }
 
+TEST(a_move_cut_by_the_safe_state_is_not_answered_as_done) {
+    Settings s = with_token();
+    s.z_speed_mm_s = 1.0;      // forty millimetres take forty seconds: far longer than link_lost_ms
+    s.rot_speed_deg_s = 10.0;  // and half a turn takes eighteen
+    Rig r(s);
+    eh3d::json::Value v;
+    Response down = r.post("/api/z?n=1&mm=0");
+    CHECK(down.status == 409 && parse(down.body, v) && !v.bool_or("ok", true) && v.string_or("why", "") == "safe_state");
+    CHECK(r.node.head().safe() && r.node.head().nozzle(1).z > 0.0);
+    Rig q(s);
+    Response turn = q.post("/api/rotate?n=1&deg=180");
+    CHECK(turn.status == 409 && parse(turn.body, v) && !v.bool_or("ok", true) && v.string_or("why", "") == "safe_state");
+    CHECK(q.node.head().nozzle(1).a < 180.0);
+}
+
+TEST(a_move_that_arrives_is_answered_as_done) {
+    Rig r(with_token());
+    eh3d::json::Value v;
+    for (const char* target : {"/api/z?n=1&mm=10.5", "/api/z?n=1&mm=10.5", "/api/z?n=1&mm=40", "/api/rotate?n=1&deg=-33.3", "/api/rotate?n=1&deg=179.9"}) {
+        Response a = r.post(target);
+        CHECK(a.status == 200 && parse(a.body, v) && v.bool_or("ok", false) && v.string_or("why", "") == "ok");
+    }
+}
+
 int main() { return check::run_all("node"); }
