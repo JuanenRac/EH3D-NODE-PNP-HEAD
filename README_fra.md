@@ -19,7 +19,7 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui tourne aujourd'hui :** un squelette avec une logique réelle et testée et sans matériel. Les règles du nœud s'exécutent sur un ordinateur contre un simulateur (96 tests réussis), mais rien ici n'a été compilé en firmware, flashé ni relié à une pompe, une vanne, un capteur de pression ou un axe.
+**Vérification d'honnêteté - ce qui tourne aujourd'hui :** un nœud qui fonctionne en simulation : une logique réelle et testée, sans firmware et sans matériel. Les règles du nœud s'exécutent sur un ordinateur contre un simulateur (96 tests réussis), mais rien ici n'a été compilé en firmware, flashé ni relié à une pompe, une vanne, un capteur de pression ou un axe.
 
 ---
 

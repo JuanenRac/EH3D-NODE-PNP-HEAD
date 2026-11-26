@@ -19,7 +19,7 @@
 
 ---
 
-**Verifica di onestà - cosa funziona oggi:** uno scheletro con logica reale e provata e senza hardware. Le regole del nodo girano su un computer contro un simulatore (96 test superati), ma nulla qui è stato compilato come firmware, scritto su una scheda o collegato a una pompa, una valvola, un sensore di pressione o un asse.
+**Verifica di onestà - cosa funziona oggi:** un nodo che funziona in simulazione: logica reale e provata, senza firmware e senza hardware. Le regole del nodo girano su un computer contro un simulatore (96 test superati), ma nulla qui è stato compilato come firmware, scritto su una scheda o collegato a una pompa, una valvola, un sensore di pressione o un asse.
 
 ---
 
