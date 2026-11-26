@@ -19,7 +19,7 @@
 
 ---
 
-**Comprobación de honestidad - lo que se ejecuta hoy:** un andamio con lógica real y probada y sin hardware. Las reglas del nodo se ejecutan en un ordenador contra un simulador (pasan 96 pruebas), pero nada de esto se ha compilado como firmware, flasheado ni conectado a una bomba, una válvula, un sensor de presión o un eje.
+**Comprobación de honestidad - lo que se ejecuta hoy:** un nodo que funciona en simulación: lógica real y probada, sin firmware y sin hardware. Las reglas del nodo se ejecutan en un ordenador contra un simulador (pasan 96 pruebas), pero nada de esto se ha compilado como firmware, flasheado ni conectado a una bomba, una válvula, un sensor de presión o un eje.
 
 ---
 
