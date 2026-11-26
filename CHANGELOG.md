@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.0.3] - Keeps listening while an order waits and says its link time (simulator only)
+
 - **The head says how long it goes without being asked:** `GET /api/status` has `link_lost_ms`, the value of the settings the head runs with, with or without the token, so a server can tell when it asks too slowly. Two new tests, on the simulator only; nothing has run on a board.
 - **The READMEs say what the node is today:** it works in simulation with tested logic, with no firmware and no hardware; they no longer call it a scaffold.
 - **A long order no longer ends in the safe state while the server is there:** a move, a turn or a `vacuum_settle_ms` longer than `link_lost_ms` made the head safe although the link was good, because nothing was heard while the node waited. It now goes on listening, and a request with the token counts; the server has to keep asking while it waits. While an order waits, a stop and letting go of the X and Y axes are carried out and other orders are `busy`. The watch itself is unchanged: a link lost in the middle, or a task that did not run for that long, makes the head safe. Not tried on a board: there is no firmware yet.
