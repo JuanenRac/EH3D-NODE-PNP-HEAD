@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- The shared workflow checker (`tools/workflow_hygiene.py`) is the current one of the documentation hub: the filters under a trigger (branches, paths, types) are no longer read as events.
+
 ## [0.0.2] - Three buses for the feeders, a pressure sensor or a vacuum switch for every nozzle and the lock of the X and Y axes
 
 - **Two ways to sense the vacuum of a nozzle**, chosen for each nozzle with `nozzle_N_sensor` in `head.cfg`: a pressure sensor read as a number (filtered, calibrated, with a band between the target and the hold limit) or a vacuum switch read as a level (debounced, with its polarity as a setting). The pick, the hold and the loss work the same for both.
