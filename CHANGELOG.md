@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A move that did not arrive is no longer answered as done (fix):** `POST /api/z` and `POST /api/rotate` answered `ok` even when the head went to its safe state or the nozzle got a fault in the middle of the move, so the machine could go on believing the nozzle was where it asked. They now answer `409` with `safe_state`, `fault` or `not_finished`. Two new tests.
 - The shared workflow checker (`tools/workflow_hygiene.py`) is the current one of the documentation hub: the filters under a trigger (branches, paths, types) are no longer read as events.
 
 ## [0.0.2] - Three buses for the feeders, a pressure sensor or a vacuum switch for every nozzle and the lock of the X and Y axes
