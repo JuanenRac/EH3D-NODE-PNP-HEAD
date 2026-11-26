@@ -29,6 +29,9 @@ public:
     virtual std::uint32_t now_ms() const = 0;
     virtual void wait(std::uint32_t ms) = 0;
     virtual void read_raw(double* raw, int n) = 0;
+    /// Called every 10 ms while a command waits (a move, a vacuum, a puff): the transport hands to Node::handle what arrived in the meantime, so that the server is heard
+    /// during a long wait. A transport that delivers nothing here leaves the node deaf while it waits, and a wait longer than link_lost_ms ends in the safe state.
+    virtual void listen() {}
 };
 
 class SimPlant : public Io {

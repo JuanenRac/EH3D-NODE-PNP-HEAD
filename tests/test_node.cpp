@@ -235,4 +235,164 @@ TEST(a_move_that_arrives_is_answered_as_done) {
     }
 }
 
+namespace {
+
+// A server that goes on asking while the node is busy: a read with the token every `every_ms`, until `until_ms` of the simulated clock. The clock can also jump once, as when the
+// task that runs the head does not get to run for a while.
+struct LinkedPlant : SimPlant {
+    using SimPlant::SimPlant;
+    Node* node = nullptr;
+    std::uint32_t every_ms = 500;
+    std::uint32_t until_ms = 0xffffffffu;
+    std::string bearer = "tok";
+    std::uint32_t stall_at_ms = 0, stall_ms = 0;  // 0: never
+    std::uint32_t order_at_ms = 0;                // when `order` is sent in the middle of a wait (0: never)
+    std::string order;
+    Response answer;
+    std::uint32_t last = 0;
+    std::uint32_t skipped = 0;
+
+    std::uint32_t now_ms() const override { return SimPlant::now_ms() + skipped; }
+    void wait(std::uint32_t ms) override {
+        SimPlant::wait(ms);
+        if (stall_ms != 0 && now_ms() >= stall_at_ms) { skipped += stall_ms; stall_ms = 0; }
+    }
+    void listen() override {
+        if (order_at_ms != 0 && now_ms() >= order_at_ms) { order_at_ms = 0; answer = node->handle(order, "tok"); }
+        if (now_ms() > until_ms || now_ms() - last < every_ms) return;
+        last = now_ms();
+        node->handle("GET /api/nozzle?n=1 HTTP/1.1", bearer);
+    }
+};
+
+struct Linked {
+    Settings s;
+    LinkedPlant plant;
+    Node node;
+    explicit Linked(Settings in) : s(in), plant(s, 3), node(s, plant) {
+        plant.node = &node;
+        plant.attach(&node.head());
+        node.start();
+    }
+    Response post(const std::string& target) { return node.handle("POST " + target + " HTTP/1.1", "tok"); }
+};
+
+// forty millimetres take twenty seconds and half a turn eighteen: far longer than link_lost_ms
+Settings slow() {
+    Settings s = with_token();
+    s.z_speed_mm_s = 2.0;
+    s.rot_speed_deg_s = 10.0;
+    return s;
+}
+
+std::string why_of(const Response& a) {
+    eh3d::json::Value v;
+    return parse(a.body, v) ? v.string_or("why", "") : "";
+}
+
+}  // namespace
+
+TEST(a_move_longer_than_the_link_watch_arrives_while_the_server_is_heard) {
+    Linked r(slow());
+    const std::uint32_t before = r.plant.now_ms();
+    Response down = r.post("/api/z?n=1&mm=20");
+    CHECK(down.status == 200 && why_of(down) == "ok");
+    Response turn = r.post("/api/rotate?n=1&deg=180");
+    CHECK(turn.status == 200 && why_of(turn) == "ok");
+    CHECK(r.plant.now_ms() - before > 10u * static_cast<std::uint32_t>(r.s.link_lost_ms));
+    CHECK(!r.node.head().safe() && r.node.head().nozzle(1).z == 20.0 && r.node.head().nozzle(1).a == 180.0);
+}
+
+TEST(a_vacuum_wait_longer_than_the_link_watch_ends_by_the_vacuum_while_the_server_is_heard) {
+    Settings s = with_token();
+    s.vacuum_settle_ms = 5000;
+    Linked r(s);
+    const std::uint32_t before = r.plant.now_ms();
+    Response a = r.post("/api/nozzle/pick?n=1");
+    CHECK(a.status == 409 && why_of(a) == "vacuum_not_reached");
+    CHECK(r.plant.now_ms() - before >= 5000u && !r.node.head().safe());
+}
+
+TEST(a_link_lost_half_way_stops_the_move_and_the_nozzle_goes_up) {
+    Linked r(slow());
+    r.plant.until_ms = r.plant.now_ms() + 3000;
+    Response a = r.post("/api/z?n=1&mm=0");
+    CHECK(a.status == 409 && why_of(a) == "safe_state");
+    CHECK(r.node.head().safe() && r.node.head().safe_reason() == "server_lost");
+    CHECK(r.node.head().nozzle(1).z == r.s.z_safe_mm && r.node.head().nozzle(1).z_target == r.s.z_safe_mm);
+    Linked q(slow());
+    q.plant.until_ms = q.plant.now_ms() + 3000;
+    Response turn = q.post("/api/rotate?n=1&deg=180");
+    CHECK(turn.status == 409 && why_of(turn) == "safe_state");
+    CHECK(q.node.head().nozzle(1).a < 60.0 && q.node.head().nozzle(1).a_target == q.node.head().nozzle(1).a);
+}
+
+TEST(a_link_lost_half_way_without_the_retract_stops_the_nozzle_where_it_is) {
+    Settings s = slow();
+    s.safe_z_retract = false;
+    Linked r(s);
+    r.plant.until_ms = r.plant.now_ms() + 3000;
+    Response a = r.post("/api/z?n=1&mm=0");
+    CHECK(a.status == 409 && why_of(a) == "safe_state");
+    const double z = r.node.head().nozzle(1).z;
+    CHECK(z > 25.0 && z < 35.0 && r.node.head().nozzle(1).z_target == z);
+    r.node.step(2000);
+    CHECK(r.node.head().nozzle(1).z == z);
+}
+
+TEST(a_link_lost_during_the_vacuum_wait_closes_the_valve_and_stops_the_pump) {
+    Settings s = with_token();
+    s.vacuum_settle_ms = 5000;
+    Linked r(s);
+    r.plant.until_ms = r.plant.now_ms() + 1000;
+    Response a = r.post("/api/nozzle/pick?n=1");
+    CHECK(a.status == 409 && why_of(a) == "safe_state");
+    CHECK(r.node.head().safe() && !r.node.head().pump() && !r.node.head().nozzle(1).valve);
+}
+
+TEST(a_task_that_hangs_ends_in_the_safe_state_even_if_the_server_asks_right_after) {
+    Linked r(slow());
+    r.plant.every_ms = 100;
+    r.plant.stall_at_ms = r.plant.now_ms() + 8000;
+    r.plant.stall_ms = static_cast<std::uint32_t>(r.s.link_lost_ms) + 500;
+    Response a = r.post("/api/z?n=1&mm=0");
+    CHECK(a.status == 409 && why_of(a) == "safe_state");
+    CHECK(r.node.head().safe() && r.node.head().nozzle(1).z == r.s.z_safe_mm);
+}
+
+TEST(a_read_with_a_wrong_token_during_a_move_does_not_keep_the_link) {
+    Linked r(slow());
+    r.plant.bearer = "nope";
+    Response a = r.post("/api/z?n=1&mm=0");
+    CHECK(a.status == 409 && why_of(a) == "safe_state" && r.node.head().safe());
+}
+
+TEST(during_a_wait_a_stop_is_carried_out_and_another_order_is_busy) {
+    Linked r(slow());
+    r.plant.order = "POST /api/light?up=50 HTTP/1.1";
+    r.plant.order_at_ms = r.plant.now_ms() + 1000;
+    CHECK(r.post("/api/z?n=1&mm=30").status == 200);
+    CHECK(r.plant.answer.status == 409 && why_of(r.plant.answer) == "busy" && r.node.head().light_up() == 0);
+    r.plant.order = "POST /api/xy?moving=0 HTTP/1.1";
+    r.plant.order_at_ms = r.plant.now_ms() + 1000;
+    CHECK(r.post("/api/z?n=1&mm=20").status == 200);
+    CHECK(r.plant.answer.status == 200);
+    r.plant.order = "POST /api/stop HTTP/1.1";
+    r.plant.order_at_ms = r.plant.now_ms() + 1000;
+    Response a = r.post("/api/z?n=1&mm=0");
+    CHECK(r.plant.answer.status == 200);
+    CHECK(a.status == 409 && why_of(a) == "not_finished" && r.node.head().nozzle(1).z > 15.0 && !r.node.head().safe());
+    CHECK(r.post("/api/light?up=50").status == 200);  // the wait is over: orders are taken again
+}
+
+TEST(a_puff_cut_short_by_the_safe_state_is_not_answered_as_done) {
+    Settings s = with_token();
+    s.blow_ms = 2000;
+    s.link_lost_ms = 500;
+    Linked r(s);
+    r.plant.until_ms = 0;
+    Response a = r.post("/api/nozzle/blow?n=1");
+    CHECK(a.status == 409 && why_of(a) == "safe_state" && !r.node.head().nozzle(1).blow);
+}
+
 int main() { return check::run_all("node"); }

@@ -14,8 +14,8 @@
 //    or that says vacuum with nothing pulling (a level), is a fault: the vacuum of that nozzle cannot be trusted.
 //  * The nozzles are "raised" when they are at or above z_safe_mm (with a small tolerance). The machine asks the head for permission before it moves its X and Y axes
 //    and gets it only when every nozzle is raised; while it has it, no nozzle is lowered under that height. rotate_min_z_mm is for turning and is not used for this.
-//  * When the server is not heard for link_lost_ms the head is in its safe state: the pump stops, the valves close (unless safe_vacuum is hold), the nozzles go up and the
-//    lights go out. Nothing moves down or takes a part until a person acknowledges.
+//  * When the server is not heard for link_lost_ms the head is in its safe state: the pump stops, the valves close (unless safe_vacuum is hold), any move stops, the nozzles
+//    go up and the lights go out, also in the middle of a command. Nothing moves down or takes a part until a person acknowledges.
 #pragma once
 
 #include <cmath>
@@ -425,7 +425,8 @@ private:
                 z.valve = false;
                 z.blow = false;
             }
-            if (cfg_.safe_z_retract && z.z_target < cfg_.z_safe_mm) z.z_target = cfg_.z_safe_mm;
+            // whatever was moving stops where it is; only the way up to the safe height goes on
+            z.z_target = cfg_.safe_z_retract && z.z < cfg_.z_safe_mm ? cfg_.z_safe_mm : z.z;
             z.a_target = z.a;
         }
         light_up_ = 0;
