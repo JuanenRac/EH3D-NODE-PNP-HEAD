@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A silence that was already too long is no longer hidden by the order that ends it (safety):** when the watch over the server had not run for longer than `link_lost_ms`, the next request with the token only refreshed it and was carried out. The silence is now judged first and the head is safe. On the simulator only.
+- **A puff always ends, also when the millisecond clock wraps around (safety):** after 49.7 days of running, a puff that ended just before the wrap could stay on.
+- **A request that arrived cut short or with an unreadable field is no longer an order (safety):** a request line without its HTTP version (where `mm=35` can arrive as `mm=3`) is `400`, and so is a field named without a value: `ack?n=` was read as the acknowledgement of the whole head.
+- **No new permission to move in X and Y in the safe state:** `POST /api/xy?moving=1` answers `safe_state` until a person acknowledges; letting the permission go is still accepted. Five new tests.
 - **The shared lessons check reads only what is part of the repository:** what git ignores, and folders such as `managed_components` that a firmware build downloads, are no longer analysed, so the local validation no longer fails over downloaded code.
 
 ## [0.0.3] - Keeps listening while an order waits and says its link time (simulator only)

@@ -427,4 +427,58 @@ TEST(a_puff_cut_short_by_the_safe_state_is_not_answered_as_done) {
     CHECK(a.status == 409 && why_of(a) == "safe_state" && !r.node.head().nozzle(1).blow);
 }
 
+// ----- orders that come late, cut short or after the safe state -----
+
+TEST(a_silence_nobody_judged_is_judged_before_the_next_order_is_heard) {
+    Rig r(with_token());
+    CHECK(r.get("/api/nozzle?n=1").status == 200);
+    r.plant.wait(static_cast<std::uint32_t>(r.s.link_lost_ms) + 1000);  // the task that watches did not run
+    Response a = r.post("/api/z?n=1&mm=1");
+    CHECK(a.status == 409);
+    CHECK(r.node.head().safe());
+}
+
+TEST(a_puff_ends_also_when_the_clock_wraps_around) {
+    Settings s = with_token();
+    double raw[kMaxNozzles] = {0, 0, 0, 0, 0, 0};
+    Head early(s);
+    CHECK(early.blow(1, 0xFFFFFFF0u).ok);        // ends after the wrap
+    early.tick(0xFFFFFFFAu, 10, raw);
+    CHECK(early.nozzle(1).blow);                 // not ended before its time
+    early.tick(0x00000050u, 10, raw);
+    CHECK(!early.nozzle(1).blow);
+    Head late(s);
+    CHECK(late.blow(1, 0xFFFFFFA0u).ok);         // ends just before the wrap, the next look is just after it
+    late.tick(0x00000004u, 10, raw);
+    CHECK(!late.nozzle(1).blow && late.nozzle(1).phase == Phase::Idle);
+}
+
+TEST(a_request_line_cut_short_is_not_an_order) {
+    Rig r(with_token());
+    CHECK(r.node.handle("POST /api/z?n=1&mm=3", "tok").status == 400);  // cut from mm=35
+    CHECK(r.node.handle("POST /api/ack", "tok").status == 400);
+    CHECK(r.node.head().nozzle(1).z_target == r.s.z_max_mm);
+}
+
+TEST(a_field_named_without_a_value_is_refused_and_not_taken_as_left_out) {
+    Rig r(with_token());
+    r.plant.wait(static_cast<std::uint32_t>(r.s.link_lost_ms) + 1000);
+    r.node.step(10);
+    CHECK(r.node.head().safe());
+    CHECK(r.post("/api/ack?n=").status == 400);  // not the acknowledgement of the whole head
+    CHECK(r.post("/api/ack?n").status == 400);
+    CHECK(r.node.head().safe());
+    CHECK(r.post("/api/light?up=").status == 400);
+}
+
+TEST(the_permission_to_move_in_x_and_y_is_not_given_in_the_safe_state) {
+    Rig r(with_token());
+    r.plant.wait(static_cast<std::uint32_t>(r.s.link_lost_ms) + 1000);
+    r.node.step(10);
+    CHECK(r.node.head().safe() && r.node.head().xy_clear());
+    CHECK(r.post("/api/xy?moving=1").status == 409);
+    CHECK(!r.node.head().xy_moving());
+    CHECK(r.post("/api/xy?moving=0").status == 200);
+}
+
 int main() { return check::run_all("node"); }

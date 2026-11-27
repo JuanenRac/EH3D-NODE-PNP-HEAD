@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-98-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-103-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** a node that works in simulation: real, tested logic, with no firmware and no hardware. The rules of the node run on a computer against a simulator (98 tests pass), but nothing here has been built into firmware, flashed or connected to a pump, a valve, a pressure sensor or an axis.
+**Honesty check - what actually runs today:** a node that works in simulation: real, tested logic, with no firmware and no hardware. The rules of the node run on a computer against a simulator (103 tests pass), but nothing here has been built into firmware, flashed or connected to a pump, a valve, a pressure sensor or an axis.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.3` |
 | Maturity | Functional |
-| Tests | 98 |
+| Tests | 103 |
 | Stack | C++17 (host tests), Python 3.10+ |
 | On real hardware | Not run on hardware yet |
 
@@ -45,7 +45,7 @@ Each line is one part of this repository and the light says how far it is today.
 
 | Area | State | What it means here |
 |---|---|---|
-| Logic and simulator | 🟡 | The rules of the node run against a simulator with a fixed seed; 98 tests pass on a computer. |
+| Logic and simulator | 🟡 | The rules of the node run against a simulator with a fixed seed; 103 tests pass on a computer. |
 | Network contract | 🟡 | The words of the node are written in docs/CONTRACT.md and a test fails when the page and the answers differ; the server's plugin does not use this node yet. |
 | Firmware | 🟠 | The firmware for the board is not written yet: only the plain helpers of the shared base are imported. |
 | Real hardware | 🔴 | Nothing has run on a pump, a valve, a pressure sensor or an axis. |
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Testing
 
-98 tests: C++ host tests with a fixed seed (they run the simulator and the words of the network and compare the contract page with the answers) and Python tests of the repository. The CI also runs the C++ tests with AddressSanitizer and UBSan.
+103 tests: C++ host tests with a fixed seed (they run the simulator and the words of the network and compare the contract page with the answers) and Python tests of the repository. The CI also runs the C++ tests with AddressSanitizer and UBSan.
 
 ## 🏗️ Build & Release
 

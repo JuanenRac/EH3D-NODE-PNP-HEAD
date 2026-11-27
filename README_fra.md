@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-98-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-103-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui tourne aujourd'hui :** un nœud qui fonctionne en simulation : une logique réelle et testée, sans firmware et sans matériel. Les règles du nœud s'exécutent sur un ordinateur contre un simulateur (98 tests réussis), mais rien ici n'a été compilé en firmware, flashé ni relié à une pompe, une vanne, un capteur de pression ou un axe.
+**Vérification d'honnêteté - ce qui tourne aujourd'hui :** un nœud qui fonctionne en simulation : une logique réelle et testée, sans firmware et sans matériel. Les règles du nœud s'exécutent sur un ordinateur contre un simulateur (103 tests réussis), mais rien ici n'a été compilé en firmware, flashé ni relié à une pompe, une vanne, un capteur de pression ou un axe.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.3` |
 | Maturité | Fonctionnel |
-| Tests | 98 |
+| Tests | 103 |
 | Pile technique | C++17 (host tests), Python 3.10+ |
 | Sur du matériel réel | Pas encore exécuté sur du matériel |
 
@@ -45,7 +45,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
-| Logique et simulateur | 🟡 | Les règles du nœud s'exécutent contre un simulateur à graine fixe ; 98 tests réussissent sur un ordinateur. |
+| Logique et simulateur | 🟡 | Les règles du nœud s'exécutent contre un simulateur à graine fixe ; 103 tests réussissent sur un ordinateur. |
 | Contrat réseau | 🟡 | Les mots du nœud sont écrits dans docs/CONTRACT.md et un test échoue quand la page et les réponses diffèrent ; le plugin du serveur n'utilise pas encore ce nœud. |
 | Firmware | 🟠 | Le firmware de la carte n'est pas encore écrit : seuls les utilitaires simples de la base commune sont importés. |
 | Matériel réel | 🔴 | Rien n'a tourné sur une pompe, une vanne, un capteur de pression ou un axe. |
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Tests
 
-98 tests : tests C++ sur ordinateur à graine fixe (ils font tourner le simulateur et les mots du réseau et comparent la page du contrat aux réponses) et tests Python du dépôt. La CI exécute aussi les tests C++ avec AddressSanitizer et UBSan.
+103 tests : tests C++ sur ordinateur à graine fixe (ils font tourner le simulateur et les mots du réseau et comparent la page du contrat aux réponses) et tests Python du dépôt. La CI exécute aussi les tests C++ avec AddressSanitizer et UBSan.
 
 ## 🏗️ Compilation et publication
 

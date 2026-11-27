@@ -134,8 +134,14 @@ public:
     bool calibrated() const { return calibrated_; }
     std::uint32_t pump_run_ms() const { return pump_run_ms_; }
 
-    /// The server was heard (a request with the token): from now on its silence is watched.
-    void heard(std::uint32_t now_ms) { watching_ = true; last_heard_ = now_ms; }
+    /// The server was heard (a request with the token): from now on its silence is watched. The silence before it is judged first: an order that arrives after a gap that was
+    /// already too long (the task that watches did not run) does not hide the loss.
+    void heard(std::uint32_t now_ms) { watch(now_ms); watching_ = true; last_heard_ = now_ms; }
+
+    /// The safe state when the server has been silent for longer than link_lost_ms.
+    void watch(std::uint32_t now_ms) {
+        if (watching_ && !safe_ && now_ms - last_heard_ > static_cast<std::uint32_t>(cfg_.link_lost_ms)) enter_safe("server_lost");
+    }
 
     // ----- commands -----
 
@@ -244,6 +250,7 @@ public:
     /// nozzle is lowered under the safe height. Letting it go is always accepted.
     Result xy_move(bool moving) {
         if (!moving) { xy_moving_ = false; return Result(); }
+        if (safe_) return no("safe_state");  // no new movement is allowed until a person has looked at the head
         if (!xy_clear()) return no("interlock_xy_nozzle_low");
         xy_moving_ = true;
         return Result();
@@ -320,7 +327,7 @@ public:
 
     /// Moves time on by `dt_ms`. `raw` holds the reading of the pressure sensor of each nozzle, in the order of the nozzles.
     void tick(std::uint32_t now, std::uint32_t dt_ms, const double* raw) {
-        if (watching_ && !safe_ && now - last_heard_ > static_cast<std::uint32_t>(cfg_.link_lost_ms)) enter_safe("server_lost");
+        watch(now);
         for (int i = 0; i < cfg_.nozzles; ++i) step_nozzle(nozzles_[static_cast<std::size_t>(i)], i, now, dt_ms, raw[i]);
         update_pump();
         if (pump_) pump_run_ms_ += dt_ms; else pump_run_ms_ = 0;
@@ -468,7 +475,8 @@ private:
                 }
                 break;
             case Phase::Releasing:
-                if (now >= z.blow_until_ms) { z.blow = false; z.phase = Phase::Idle; z.since_ms = now; }
+                if (static_cast<std::int32_t>(now - z.blow_until_ms) >= 0) {  // also right when the clock wraps around (49.7 days)
+                    z.blow = false; z.phase = Phase::Idle; z.since_ms = now; }
                 break;
             default: break;
         }

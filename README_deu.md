@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-98-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-103-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**Ehrlichkeitscheck - was heute tatsächlich läuft:** ein Knoten, der in der Simulation funktioniert: echte, getestete Logik, ohne Firmware und ohne Hardware. Die Regeln des Knotens laufen auf einem Rechner gegen einen Simulator (98 Tests bestehen), aber nichts davon wurde als Firmware gebaut, geflasht oder mit einer Pumpe, einem Ventil, einem Drucksensor oder einer Achse verbunden.
+**Ehrlichkeitscheck - was heute tatsächlich läuft:** ein Knoten, der in der Simulation funktioniert: echte, getestete Logik, ohne Firmware und ohne Hardware. Die Regeln des Knotens laufen auf einem Rechner gegen einen Simulator (103 Tests bestehen), aber nichts davon wurde als Firmware gebaut, geflasht oder mit einer Pumpe, einem Ventil, einem Drucksensor oder einer Achse verbunden.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.3` |
 | Reifegrad | Funktionsfähig |
-| Tests | 98 |
+| Tests | 103 |
 | Technologie-Stack | C++17 (host tests), Python 3.10+ |
 | Auf echter Hardware | Noch nicht auf Hardware ausgeführt |
 
@@ -45,7 +45,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
-| Logik und Simulator | 🟡 | Die Regeln des Knotens laufen gegen einen Simulator mit festem Seed; 98 Tests bestehen auf einem Rechner. |
+| Logik und Simulator | 🟡 | Die Regeln des Knotens laufen gegen einen Simulator mit festem Seed; 103 Tests bestehen auf einem Rechner. |
 | Netzwerkvertrag | 🟡 | Die Worte des Knotens stehen in docs/CONTRACT.md und ein Test schlägt fehl, wenn Seite und Antworten abweichen; das Plugin des Servers nutzt diesen Knoten noch nicht. |
 | Firmware | 🟠 | Die Firmware für die Platine ist noch nicht geschrieben: nur die einfachen Helfer der gemeinsamen Basis sind importiert. |
 | Echte Hardware | 🔴 | Auf einer Pumpe, einem Ventil, einem Drucksensor oder einer Achse ist noch nichts gelaufen. |
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Tests
 
-98 Tests: C++-Tests auf dem Rechner mit festem Seed (sie lassen den Simulator und die Netzwerkworte laufen und vergleichen die Vertragsseite mit den Antworten) und Python-Tests des Repositorys. Die CI führt die C++-Tests auch mit AddressSanitizer und UBSan aus.
+103 Tests: C++-Tests auf dem Rechner mit festem Seed (sie lassen den Simulator und die Netzwerkworte laufen und vergleichen die Vertragsseite mit den Antworten) und Python-Tests des Repositorys. Die CI führt die C++-Tests auch mit AddressSanitizer und UBSan aus.
 
 ## 🏗️ Build und Veröffentlichung
 

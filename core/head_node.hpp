@@ -45,7 +45,9 @@ inline bool parse_request_line(const std::string& line, Request& out) {
     std::size_t a = line.find(' ');
     if (a == std::string::npos || a == 0) return false;
     std::size_t b = line.find(' ', a + 1);
-    std::string target = line.substr(a + 1, b == std::string::npos ? std::string::npos : b - a - 1);
+    // the version of HTTP ends the line: without it the line was cut short, and `mm=35` may have arrived as `mm=3`
+    if (b == std::string::npos || line.compare(b + 1, 5, "HTTP/") != 0) return false;
+    std::string target = line.substr(a + 1, b - a - 1);
     if (target.empty() || target[0] != '/') return false;
     out.method = line.substr(0, a);
     std::size_t q = target.find('?');
@@ -65,6 +67,19 @@ inline std::string query_value(const std::string& query, const std::string& key)
         pos = end + 1;
     }
     return "";
+}
+
+/// Whether the query names `key` at all, with a value or without: a field that is there and cannot be read is refused, never taken as left out.
+inline bool query_has(const std::string& query, const std::string& key) {
+    std::size_t pos = 0;
+    while (pos <= query.size()) {
+        std::size_t end = query.find('&', pos);
+        if (end == std::string::npos) end = query.size();
+        std::string pair = query.substr(pos, end - pos);
+        if (pair.substr(0, pair.find('=')) == key) return true;
+        pos = end + 1;
+    }
+    return false;
 }
 
 inline std::string error_body(const char* error, const char* key = nullptr) {
@@ -125,8 +140,8 @@ public:
         if (r.path == "/api/light") {
             long long up = -1, down = -1;
             std::string u = query_value(r.query, "up"), d = query_value(r.query, "down");
-            if (!u.empty() && !cfg::parse_int(u, 0, 100, up)) return {400, error_body("bad_request", "up")};
-            if (!d.empty() && !cfg::parse_int(d, 0, 100, down)) return {400, error_body("bad_request", "down")};
+            if (query_has(r.query, "up") && !cfg::parse_int(u, 0, 100, up)) return {400, error_body("bad_request", "up")};
+            if (query_has(r.query, "down") && !cfg::parse_int(d, 0, 100, down)) return {400, error_body("bad_request", "down")};
             return finish(head_.set_light(static_cast<int>(up), static_cast<int>(down)), 0);
         }
         if (r.path == "/api/xy") {
@@ -134,7 +149,7 @@ public:
             if (m != "0" && m != "1") return {400, error_body("bad_request", "moving")};
             return finish(head_.xy_move(m == "1"), 0);
         }
-        if (r.path == "/api/ack" && query_value(r.query, "n").empty()) return finish(head_.ack(0, io_.now_ms()), 0);
+        if (r.path == "/api/ack" && !query_has(r.query, "n")) return finish(head_.ack(0, io_.now_ms()), 0);
         int n = 0;
         if (!nozzle_of(r, n)) return {400, error_body("bad_request", "n")};
         if (r.path == "/api/ack") return finish(head_.ack(n, io_.now_ms()), n);

@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-C%2B%2B17%20%2B%20Python-blue.svg" alt="C++17 and Python">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Tests-98-2EA043.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-103-2EA043.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-4CAF50.svg" alt="Maturity">
 </p>
 
 ---
 
-**Comprobación de honestidad - lo que se ejecuta hoy:** un nodo que funciona en simulación: lógica real y probada, sin firmware y sin hardware. Las reglas del nodo se ejecutan en un ordenador contra un simulador (pasan 98 pruebas), pero nada de esto se ha compilado como firmware, flasheado ni conectado a una bomba, una válvula, un sensor de presión o un eje.
+**Comprobación de honestidad - lo que se ejecuta hoy:** un nodo que funciona en simulación: lógica real y probada, sin firmware y sin hardware. Las reglas del nodo se ejecutan en un ordenador contra un simulador (pasan 103 pruebas), pero nada de esto se ha compilado como firmware, flasheado ni conectado a una bomba, una válvula, un sensor de presión o un eje.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versión | `0.0.3` |
 | Madurez | Funcional |
-| Pruebas | 98 |
+| Pruebas | 103 |
 | Pila tecnológica | C++17 (host tests), Python 3.10+ |
 | En hardware real | Aún no se ha ejecutado en hardware |
 
@@ -45,7 +45,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 
 | Área | Estado | Qué significa aquí |
 |---|---|---|
-| Lógica y simulador | 🟡 | Las reglas del nodo se ejecutan contra un simulador con semilla fija; pasan 98 pruebas en un ordenador. |
+| Lógica y simulador | 🟡 | Las reglas del nodo se ejecutan contra un simulador con semilla fija; pasan 103 pruebas en un ordenador. |
 | Contrato de red | 🟡 | Las palabras del nodo están en docs/CONTRACT.md y una prueba falla si la página y las respuestas difieren; el plugin del servidor todavía no usa este nodo. |
 | Firmware | 🟠 | El firmware de la placa aún no está escrito: solo se han importado los ayudantes simples de la base compartida. |
 | Hardware real | 🔴 | Nada se ha ejecutado en una bomba, una válvula, un sensor de presión o un eje. |
@@ -112,7 +112,7 @@ python -I -m unittest discover -s tools -p "test_*.py"
 
 ## 🧪 Pruebas
 
-98 pruebas: pruebas de C++ en el ordenador con semilla fija (ejecutan el simulador y las palabras de la red y comparan la página del contrato con las respuestas) y pruebas de Python del repositorio. La CI también ejecuta las de C++ con AddressSanitizer y UBSan.
+103 pruebas: pruebas de C++ en el ordenador con semilla fija (ejecutan el simulador y las palabras de la red y comparan la página del contrato con las respuestas) y pruebas de Python del repositorio. La CI también ejecuta las de C++ con AddressSanitizer y UBSan.
 
 ## 🏗️ Compilación y publicación
 
