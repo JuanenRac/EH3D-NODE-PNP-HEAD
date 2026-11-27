@@ -5,7 +5,7 @@
 #pragma once
 
 #ifndef PNP_HEAD_VERSION
-#define PNP_HEAD_VERSION "0.0.3"
+#define PNP_HEAD_VERSION "0.0.4"
 #endif
 
 namespace pnp_head {
